@@ -2,19 +2,24 @@
 
 
 from datasets import load_dataset
-from hierarical_constraint import generate_constraints
-from hierarical_constraint import show_tree, show_iterating_tree
+from hierarchical_constraint import generate_constraints
+from hierarchical_constraint import show_tree, show_iterating_tree
 from hc_tsne import tsne, hc_tsne
+from loss_logger import LossLogger
 
 
 params_config = {
     "mnist": {
-        "Z_init": dict(perplexity=50, n_iter=500, random_state=4321, verbose=2),
+        "Z_init": dict(
+            perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2
+        ),
         "Z_new": dict(
             perplexity=100,
             n_iter=100,
-            random_state=4321,
+            random_state=2020,
+            n_jobs=-2,
             verbose=2,
+            callbacks_every_iters=10,
             early_exaggeration_iter=0,
         ),
         "hc": dict(margin=0.5, weights=(0.5, 0.5, 0.0)),
@@ -23,27 +28,37 @@ params_config = {
         "alpha2": 2e-4,
     },
     "fmnist": {
-        "Z_init": dict(perplexity=50, n_iter=500, random_state=4321, verbose=2),
+        "Z_init": dict(
+            perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2
+        ),
         "Z_new": dict(
             perplexity=100,
-            n_iter=50,
-            random_state=4321,
+            n_iter=100,
+            random_state=2020,
+            n_jobs=-2,
             verbose=2,
+            callbacks_every_iters=10,
             early_exaggeration_iter=0,
         ),
+        "hc": dict(margin=0.5, weights=(0.5, 0.5, 0.0)),
         "alpha0": 6e-4,
         "alpha1": 6e-4,
         "alpha2": 7.5e-4,
     },
     "cifar10": {
-        "Z_init": dict(perplexity=50, n_iter=500, random_state=4321, verbose=2),
+        "Z_init": dict(
+            perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2
+        ),
         "Z_new": dict(
             perplexity=100,
-            n_iter=50,
-            random_state=4321,
+            n_iter=100,
+            random_state=2020,
+            n_jobs=-2,
             verbose=2,
+            callbacks_every_iters=10,
             early_exaggeration_iter=0,
         ),
+        "hc": dict(margin=0.5, weights=(0.5, 0.5, 0.0)),
         "alpha0": 1.5e-3,
         "alpha1": 1.25e-3,
         "alpha2": 5e-4,
@@ -75,18 +90,42 @@ def main(args):
     alpha = config[f"alpha{int(args.depth)}"]
 
     # run original tsne
-    Z_init = tsne(X_train, **config["Z_init"])
+    Z0 = tsne(X_train, **config["Z_init"])
+    Z0_test = Z0.transform(X_test)
+
+    # loss logger object to store loss value in each iteration
+    logger = LossLogger()
 
     # run hc_tsne
-    Z_new = hc_tsne(
+    Z1 = hc_tsne(
         X_train,
-        initialization=Z_init,
+        initialization=Z0,
         tree=tree,
         alpha=alpha,
+        loss_logger=logger,
         **config["hc"],
         **config["Z_new"],
     )
-    print(Z_new.shape)
+    Z1_test = Z1.transform(X_test)
+
+    # test knn score
+    calculate_KNN_score(y_train, Z0, Z1)
+    calculate_KNN_score(y_test, Z0_test, Z1_test)
+
+    print(logger.get_loss("kl_loss"))
+    print(logger.get_loss("new_loss"))
+    print(logger.get_loss("htriplet_loss"))
+
+
+def calculate_KNN_score(labels, Z_init, Z_new, K=5):
+    from sklearn.neighbors import KNeighborsClassifier
+
+    knn = KNeighborsClassifier(n_neighbors=K, n_jobs=-1, algorithm="auto")
+
+    old_score = knn.fit(X=Z_init, y=labels).score(X=Z_init, y=labels)
+    new_score = knn.fit(X=Z_new, y=labels).score(X=Z_new, y=labels)
+
+    print(f"K={K}, old_score={old_score:.3f}, new_score={new_score:.3f}")
 
 
 if __name__ == "__main__":

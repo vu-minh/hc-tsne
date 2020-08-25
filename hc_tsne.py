@@ -8,20 +8,15 @@ from openTSNE import _tsne
 from openTSNE.quad_tree import QuadTree
 from hierarchical_triplet import hierarchical_triplet_loss
 
-
 EPSILON = np.finfo(np.float64).eps
 
 
 def tsne(X, initialization="pca", **tsne_kwargs):
     """Original openTSNE"""
     tsne = TSNE(
-        n_jobs=-1,
-        initialization=initialization,
-        negative_gradient_method="bh",
-        **tsne_kwargs,
+        initialization=initialization, negative_gradient_method="bh", **tsne_kwargs,
     )
-    Z = tsne.fit(X)
-    return np.array(Z)
+    return tsne.fit(X)
 
 
 def hc_tsne(
@@ -31,6 +26,7 @@ def hc_tsne(
     alpha=1e-3,
     weights=(0.5, 0.5, 0.0),
     margin=0.5,
+    loss_logger=None,
     **tsne_kwargs,
 ):
     """Run openTSNE with custom `negative_gradient_method`, in which the
@@ -44,6 +40,7 @@ def hc_tsne(
         weights: weights of different elements in the regularization
         margin: margin in the triplet loss.
             The real margin m is calculated as `margin * dist(anchor, negative)`
+        loss_logger: logger object (containing a dict) to store loss at each iter.
         **tsne_kwargs: openTSNE params
 
     Returns:
@@ -58,10 +55,11 @@ def hc_tsne(
 
     # run openTSNE with custom negative gradient function
     tsne = TSNE(
-        n_jobs=-1,
         initialization=initialization,
         negative_gradient_method=partial(
-            my_kl_divergence_bh, list_regularizers=[(alpha, tree_regularizer)]
+            my_kl_divergence_bh,
+            list_regularizers=[(alpha, tree_regularizer)],
+            logger=loss_logger,
         ),
         **tsne_kwargs,
     )
@@ -83,6 +81,7 @@ def my_kl_divergence_bh(
     should_eval_error=False,
     n_jobs=1,
     list_regularizers=[],
+    logger=None,
     **_,
 ):
     gradient = np.zeros_like(embedding, dtype=np.float64, order="C")
@@ -127,7 +126,7 @@ def my_kl_divergence_bh(
     regu_loss = 0.0
     if np.sum(P) <= 1.0 + 1e-6:
         regu_loss, regu_grad = loss_and_gradient_of_group_constraints(
-            list_regularizers, Y=np.array(embedding, dtype=np.float32)
+            list_regularizers, Y=np.array(embedding, dtype=np.float32), logger=logger
         )
         gradient += regu_grad
 
@@ -135,13 +134,15 @@ def my_kl_divergence_bh(
     # have to include normalziation term separately
     if should_eval_error:
         kl_divergence_ += sum_P * np.log(sum_Q + EPSILON)
+        logger and logger.log("kl_loss", kl_divergence_)
         kl_divergence_ += regu_loss
+        logger and logger.log("new_loss", kl_divergence_)
 
     return kl_divergence_, gradient
 
 
 def loss_and_gradient_of_group_constraints(
-    list_regularizers, Y, normalized=False, clip_grad=False
+    list_regularizers, Y, normalized=False, clip_grad=False, logger=None
 ):
     total_loss = 0.0
     total_grad = np.zeros_like(Y, dtype=np.float64, order="C")
@@ -154,7 +155,7 @@ def loss_and_gradient_of_group_constraints(
         loss, grad = regularizer(Y=Y)
         total_loss += alpha * loss
         total_grad += alpha * grad
-        # print(str(regularizer).split("<")[1][:20], loss)
+        logger and logger.log("htriplet_loss", loss)
 
     # clip too large graident values
     if clip_grad:

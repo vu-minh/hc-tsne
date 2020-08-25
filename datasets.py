@@ -52,6 +52,8 @@ def load_dataset(
 
     X_train = X_train.reshape(X_train.shape[0], -1).astype("float32") / 255.0
     X_test = X_test.reshape(X_test.shape[0], -1).astype("float32") / 255.0
+    y_train = y_train.reshape(-1)
+    y_test = y_test.reshape(-1)
 
     np.random.seed(seed)
     if n_train:

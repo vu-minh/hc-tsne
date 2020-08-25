@@ -101,9 +101,7 @@ class HierarchicalConstraint:
         return node
 
 
-def _generate_constraints_fmnist(
-    labels, label_names, config, depth=0, label_percent=1.0
-):
+def _generate_constraints_fmnist(labels, label_names, depth=0, label_percent=1.0):
     H = HierarchicalConstraint(labels, label_names, label_percent)
 
     if depth == 2:
@@ -133,9 +131,7 @@ def _generate_constraints_fmnist(
     return tree
 
 
-def _generate_constraints_cifar10(
-    labels, label_names, config, depth=0, label_percent=1.0
-):
+def _generate_constraints_cifar10(labels, label_names, depth=0, label_percent=1.0):
     H = HierarchicalConstraint(labels, label_names, label_percent)
 
     # create intermediate groups
@@ -176,9 +172,7 @@ def _generate_constraints_cifar10(
     return tree
 
 
-def _generate_constraints_mnist(
-    labels, label_names, config, depth=0, label_percent=1.0
-):
+def _generate_constraints_mnist(labels, label_names, depth=0, label_percent=1.0):
 
     H = HierarchicalConstraint(labels, label_names, label_percent)
 
@@ -226,7 +220,7 @@ def generate_constraints(dataset_name, labels, label_names, depth=0, label_perce
         "fmnist": _generate_constraints_fmnist,
         "cifar10": _generate_constraints_cifar10,
     }[dataset_name]
-    tree = generate_func(labels, label_names, depth, label_percent)
+    tree = generate_func(labels, label_names, depth=depth, label_percent=label_percent)
 
     # note to update the level of each node in the tree
     _update_level(tree)

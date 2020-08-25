@@ -22,9 +22,9 @@ if __name__ == "__main__":
     logger = LossLogger()
 
     for i in range(30):
-        logger.log("a", i)
+        logger and logger.log("a", i)
         if i % 5 == 0:
-            logger.log("a5", i)
+            logger and logger.log("a5", i)
 
     print(logger.loss_names())
     print(logger.get_loss("a"), logger.get_loss("a5"))

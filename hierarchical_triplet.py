@@ -129,6 +129,4 @@ def hierarchical_triplet_loss(
         raise ValueError("Regularization term too large!")
 
     # TODO: recap gradient (there are some points that move much more than others)
-
-    print(loss, np.linalg.norm(grad))
     return loss, grad
