@@ -38,7 +38,7 @@ dataset_objects = {
 }
 
 
-def load_dataset(dataset_name="mnist", N_train=10000, N_test=5000):
+def load_dataset(dataset_name="mnist", N_train=10000, N_test=5000, debug=False):
     """Get keras dataset. ("mnist", "fmnist" and "cifar10").
     If `N_train` or `N_test` is set to None, all the train/test set will be returned.
     """
@@ -53,18 +53,20 @@ def load_dataset(dataset_name="mnist", N_train=10000, N_test=5000):
         idx = np.random.choice(X_test.shape[0], replace=False, size=N_test)
         X_test, y_test = X_test[idx], y_test[idx]
 
-    X_train = X_train.reshape(X_train.shape[0], -1) / 255.0
-    X_test = X_test.reshape(X_test.shape[0], -1) / 255.0
+    X_train = X_train.reshape(X_train.shape[0], -1).astype("float32") / 255.0
+    X_test = X_test.reshape(X_test.shape[0], -1).astype("float32") / 255.0
+
+    if debug:
+        print(dataset_name, X_train.dtype, X_test.dtype)
+        print(X_train.shape, y_train.shape, np.unique(y_train, return_counts=True))
+        print(X_test.shape, y_test.shape, np.unique(y_test, return_counts=True))
+        print(label_names)
 
     return (X_train, y_train), (X_test, y_test), label_names
 
 
 if __name__ == "__main__":
     dataset_name = ["mnist", "fmnist", "cifar10"][0]
-    ((X_train, y_train), (X_test, y_test),
-     label_names) = load_dataset(dataset_name)
-
-    print(dataset_name)
-    print(X_train.shape, y_train.shape, np.unique(y_train, return_counts=True))
-    print(X_test.shape, y_test.shape, np.unique(y_test, return_counts=True))
-    print(label_names)
+    (X_train, y_train), (X_test, y_test), label_names = load_dataset(
+        dataset_name, debug=True
+    )
