@@ -3,7 +3,8 @@
 
 from datasets import load_dataset
 from hierarical_constraint import generate_constraints
-from hierarical_constraint import show_tree, show_iterating_tree, update_level
+from hierarical_constraint import show_tree, show_iterating_tree
+from hc_tsne import tsne, hc_tsne
 
 
 params_config = {
@@ -16,6 +17,7 @@ params_config = {
             verbose=2,
             early_exaggeration_iter=0,
         ),
+        "hc": dict(margin=0.5, weights=(0.5, 0.5, 0.0)),
         "alpha0": 5e-4,
         "alpha1": 2e-4,
         "alpha2": 2e-4,
@@ -54,21 +56,37 @@ def main(args):
 
     # load dataset
     (X_train, y_train), (X_test, y_test), label_names = load_dataset(
-        dataset_name, args.n_train, args.n_test, debug=True
+        dataset_name, args.n_train, args.n_test, args.pca, debug=True
     )
 
-    # load param config for building hierarchical constraint in tree form
-    tree, group_constraints = generate_constraints(
+    # build hierarchical constraint in tree form
+    tree = generate_constraints(
         dataset_name,
         labels=y_train,
         label_names=label_names,
-        config=params_config[dataset_name],
         depth=args.depth,
         label_percent=args.label_percent,
     )
-    update_level(tree)
     show_tree(tree)
     show_iterating_tree(tree)
+
+    # load param config
+    config = params_config[dataset_name]
+    alpha = config[f"alpha{int(args.depth)}"]
+
+    # run original tsne
+    Z_init = tsne(X_train, **config["Z_init"])
+
+    # run hc_tsne
+    Z_new = hc_tsne(
+        X_train,
+        initialization=Z_init,
+        tree=tree,
+        alpha=alpha,
+        **config["hc"],
+        **config["Z_new"],
+    )
+    print(Z_new.shape)
 
 
 if __name__ == "__main__":
@@ -78,13 +96,14 @@ if __name__ == "__main__":
     argm = parser.add_argument
 
     argm("--dataset_name", "-d")
-    argm("--n_train", default=10000, help="Number of datapoints for training set")
-    argm("--n_test", default=5000, help="Number of datasetpoints fro test set")
+    argm("--pca", default=0.9, type=float, help="Run PCA on raw data")
+    argm("--n_train", default=10000, type=int, help="# datapoints for training set")
+    argm("--n_test", default=5000, type=int, help="# datasetpoints fro test set")
 
-    argm("--depth", default=2, help="Depth of tree in the hierarchy.")
-    argm("--label_percent", default=1.0, help="% of label used to generate groups.")
+    argm("--depth", default=2, type=int, help="Depth of tree in the hierarchy.")
+    argm("--label_percent", default=1.0, type=float, help="% label used in each group.")
 
-    argm("--margin", "-m", default=0.5, help="Relative margin in tripletloss")
+    argm("--margin", "-m", default=0.5, type=float, help="Relative margin tripletloss")
 
     args = parser.parse_args()
     print(args)

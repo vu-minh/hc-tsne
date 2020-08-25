@@ -53,7 +53,7 @@ def show_iterating_tree(tree, iterator=LevelOrderIter):
         print(node.name.ljust(20), " <------ ", p)
 
 
-def update_level(tree):
+def _update_level(tree):
     for level, children in enumerate(reversed(list(LevelGroupOrderIter(tree)))):
         for node in children:
             node.level = level + 1
@@ -129,12 +129,8 @@ def _generate_constraints_fmnist(
         raise ValueError(f"Hierarchy with depth = {depth} is not supported!")
 
     # create root node
-    alpha = config[f"alpha{depth}"]
-    group_root = H._create_intermediate_node("root", root)
-    group_constraints = [
-        GroupConstraint(name="hierarchy", alpha=alpha, list_groups=group_root)
-    ]
-    return group_root, group_constraints
+    tree = H._create_intermediate_node("root", root)
+    return tree
 
 
 def _generate_constraints_cifar10(
@@ -176,12 +172,8 @@ def _generate_constraints_cifar10(
         raise ValueError(f"Hierarchy with depth = {depth} is not supported!")
 
     # create root node
-    alpha = config[f"alpha{depth}"]
-    group_root = H._create_intermediate_node("root", root)
-    group_constraints = [
-        GroupConstraint(name="hierarchy", alpha=alpha, list_groups=group_root)
-    ]
-    return group_root, group_constraints
+    tree = H._create_intermediate_node("root", root)
+    return tree
 
 
 def _generate_constraints_mnist(
@@ -207,12 +199,8 @@ def _generate_constraints_mnist(
     else:
         raise ValueError(f"Hierarchy with depth = {depth} is not supported!")
 
-    alpha = config[f"alpha{depth}"]
-    group_root = H._create_intermediate_node("root", root)
-    group_constraints = [
-        GroupConstraint(name="hierarchy", alpha=alpha, list_groups=group_root)
-    ]
-    return group_root, group_constraints
+    tree = H._create_intermediate_node("root", root)
+    return tree
 
 
 def _generate_constraints_flat(labels, label_names, config, depth=0, label_percent=1.0):
@@ -228,19 +216,18 @@ def _generate_constraints_flat(labels, label_names, config, depth=0, label_perce
     else:
         raise ValueError(f"Hierarchy with depth = {depth} is not supported!")
 
-    alpha = config[f"alpha{depth}"]
-    group_root = H._create_intermediate_node("root", root)
-    group_constraints = [
-        GroupConstraint(name="hierarchy", alpha=alpha, list_groups=group_root)
-    ]
-    return group_root, group_constraints
+    tree = H._create_intermediate_node("root", root)
+    return tree
 
 
-def generate_constraints(
-    dataset_name, labels, label_names, config, depth=0, label_percent=1.0
-):
-    return {
+def generate_constraints(dataset_name, labels, label_names, depth=0, label_percent=1.0):
+    generate_func = {
         "mnist": _generate_constraints_mnist,
         "fmnist": _generate_constraints_fmnist,
         "cifar10": _generate_constraints_cifar10,
-    }[dataset_name](labels, label_names, config, depth, label_percent)
+    }[dataset_name]
+    tree = generate_func(labels, label_names, depth, label_percent)
+
+    # note to update the level of each node in the tree
+    _update_level(tree)
+    return tree

@@ -5,18 +5,14 @@ import numpy as np
 from anytree import LevelOrderIter, LevelGroupOrderIter
 
 
-def _triplet_loss(anchor_indices,
-                  positive_point,
-                  negative_point,
-                  Y,
-                  margin=0.0):
+def _triplet_loss(anchor_indices, positive_point, negative_point, Y, margin=0.0):
     """Triplet loss among (anchor, pos, neg).
     This loss is calculated for all anchors in `anchor_indices`.
     """
     N_anchors = len(anchor_indices)
 
-    dist_anchor_pos = np.sum((Y[anchor_indices] - positive_point)**2, axis=1)
-    dist_anchor_neg = np.sum((Y[anchor_indices] - negative_point)**2, axis=1)
+    dist_anchor_pos = np.sum((Y[anchor_indices] - positive_point) ** 2, axis=1)
+    dist_anchor_neg = np.sum((Y[anchor_indices] - negative_point) ** 2, axis=1)
     loss_per_item = dist_anchor_pos - (1.0 - margin) * dist_anchor_neg
 
     violated = (loss_per_item > 0).reshape(-1)
@@ -28,8 +24,11 @@ def _triplet_loss(anchor_indices,
 
         # update gradient for the violated anchor points
         violated_anchor_indices = np.array(anchor_indices)[violated]
-        change = (margin * Y[violated_anchor_indices] +
-                  (1.0 - margin) * negative_point - positive_point)
+        change = (
+            margin * Y[violated_anchor_indices]
+            + (1.0 - margin) * negative_point
+            - positive_point
+        )
         grad_per_node[violated_anchor_indices] += 2.0 * change / N_anchors
 
     return loss_per_node, grad_per_node
@@ -42,17 +41,16 @@ def _kmean_like(point_indices, centroid, Y):
     loss_per_node = np.einsum("ij,ij->i", Y[point_indices], centroid).mean()
 
     grad_per_node = np.zeros_like(Y, dtype=np.float32)
-    grad_per_node[point_indices] = (2.0 * (Y[point_indices] - centroid) /
-                                    len(point_indices))
+    grad_per_node[point_indices] = (
+        2.0 * (Y[point_indices] - centroid) / len(point_indices)
+    )
 
     return loss_per_node, grad_per_node
 
 
-def hierarchical_triplet_loss(tree,
-                              Y,
-                              margin=0.5,
-                              weights=(1.0, 1.0, 0.0),
-                              weight_by_level=False):
+def hierarchical_triplet_loss(
+    Y, tree, margin=0.5, weights=(1.0, 1.0, 0.0), weight_by_level=False
+):
     """Hierarchical triplet loss, based on the input `tree`-structure.
     Margin is used as `m = margin * d_{ik}`: distance anchor-negative.
     """
@@ -123,8 +121,7 @@ def hierarchical_triplet_loss(tree,
     if w3 > 0:
         for node in LevelOrderIter(tree):
             node_weight = max(1, node.level) if weight_by_level else 1
-            loss_per_node, grad_per_node = _kmean_like(node.items,
-                                                       node.centroid, Y)
+            loss_per_node, grad_per_node = _kmean_like(node.items, node.centroid, Y)
             loss += w3 * node_weight * loss_per_node
             grad += w3 * node_weight * grad_per_node
 
