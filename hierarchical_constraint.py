@@ -54,11 +54,6 @@ def show_iterating_tree(tree, iterator=LevelOrderIter):
         print(node.name.ljust(20), " <------ ", p)
 
 
-def export_tree(tree, out_name, left_to_right=True):
-    options = ["rankdir=LR"] if left_to_right else None
-    DotExporter(tree, options=options).to_picture(out_name)
-
-
 def _update_level(tree):
     for level, children in enumerate(reversed(list(LevelGroupOrderIter(tree)))):
         for node in children:
@@ -220,7 +215,9 @@ def _generate_constraints_flat(labels, label_names, config, depth=0, label_perce
     return tree
 
 
-def generate_constraints(dataset_name, labels, label_names, depth=0, label_percent=1.0):
+def generate_constraints(
+    dataset_name, labels, label_names, depth=0, label_percent=1.0, tree_name=""
+):
     generate_func = {
         "mnist": _generate_constraints_mnist,
         "fmnist": _generate_constraints_fmnist,
@@ -230,4 +227,8 @@ def generate_constraints(dataset_name, labels, label_names, depth=0, label_perce
 
     # note to update the level of each node in the tree
     _update_level(tree)
+
+    if tree_name:
+        DotExporter(tree, options=["rankdir=LR"]).to_picture(tree_name)
+
     return tree
