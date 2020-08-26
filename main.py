@@ -3,7 +3,7 @@
 
 from datasets import load_dataset
 from hierarchical_constraint import generate_constraints
-from hierarchical_constraint import show_tree, show_iterating_tree
+from hierarchical_constraint import show_tree, show_iterating_tree, export_tree
 from hc_tsne import tsne, hc_tsne
 from loss_logger import LossLogger
 
@@ -85,6 +85,11 @@ def main(args):
     show_tree(tree)
     show_iterating_tree(tree)
 
+    tree_name = f"{plot_dir}/tree.png"
+    export_tree(tree, tree_name, left_to_right=True)
+
+    return
+
     # load param config
     config = params_config[dataset_name]
     alpha = config[f"alpha{int(args.depth)}"]
@@ -129,6 +134,7 @@ def calculate_KNN_score(labels, Z_init, Z_new, K=5):
 
 
 if __name__ == "__main__":
+    import os
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -146,5 +152,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     print(args)
+
+    plot_dir = f"plots/{args.dataset_name}"
+    Z_dir = f"Z/{args.dataset_name}"
+    for d in [plot_dir, Z_dir]:
+        if not os.path.exists(d):
+            os.mkdir(d)
 
     main(args)

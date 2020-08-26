@@ -3,6 +3,7 @@
 import numpy as np
 from collections import namedtuple
 from anytree import NodeMixin, RenderTree, LevelOrderIter, LevelGroupOrderIter
+from anytree.exporter import DotExporter
 
 
 GroupConstraint = namedtuple("GroupConstraint", ["name", "alpha", "list_groups"])
@@ -51,6 +52,11 @@ def show_iterating_tree(tree, iterator=LevelOrderIter):
         else:
             p = node.parent.name
         print(node.name.ljust(20), " <------ ", p)
+
+
+def export_tree(tree, out_name, left_to_right=True):
+    options = ["rankdir=LR"] if left_to_right else None
+    DotExporter(tree, options=options).to_picture(out_name)
 
 
 def _update_level(tree):
