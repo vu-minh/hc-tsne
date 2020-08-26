@@ -5,6 +5,81 @@ import numpy as np
 from anytree import LevelOrderIter, LevelGroupOrderIter
 
 
+def _triplet_loss_all(
+    anchor_indices, positive_indices, negative_indices, Y, margin=0.0
+):
+    loss = 0.0
+    grad = np.zeros_like(Y, dtype=np.float32)
+
+    n_anchor = len(anchor_indices)
+    n_pos = len(positive_indices)
+    n_neg = len(negative_indices)
+    if n_anchor == 0 or n_pos == 0 or n_neg == 0:
+        return loss, grad
+
+    positive_centroid = Y[positive_indices].mean()
+    negative_centroid = Y[negative_indices].mean()
+
+    dist_anchor_pos = np.sum((Y[anchor_indices] - positive_centroid) ** 2, axis=1)
+    dist_anchor_neg = np.sum((Y[anchor_indices] - negative_centroid) ** 2, axis=1)
+    loss_per_item = dist_anchor_pos - (1.0 - margin) * dist_anchor_neg
+
+    violated = (loss_per_item > 0).reshape(-1)
+
+    if np.any(violated):
+        loss = loss_per_item[violated].sum()
+
+        # update gradient for the violated anchor points
+        violated_anchor_indices = np.array(anchor_indices)[violated]
+        change = (
+            margin * Y[violated_anchor_indices]
+            + (1.0 - margin) * negative_centroid
+            - positive_centroid
+        )
+        grad[violated_anchor_indices] += 2.0 * change
+
+        # update gradient for points in list `positive_indices`
+        for positive_index in positive_indices:
+            change1 = np.sum(
+                Y[violated_anchor_indices] - Y[positive_index].reshape(1, -1), axis=0
+            )
+            grad[positive_index] += -2 / n_pos * change1
+
+        # update gradient for poitns in list `negative_indices`
+
+    return loss / n_anchor, grad / n_anchor
+
+
+def _triplet_loss_anchor_vs_all(
+    anchor_index, positive_indices, negative_indices, Y, margin=0.0
+):
+    """Triplet loss among an `anchor_index`, all `possitive_indices`
+        and all `negative_indices`.
+    """
+    N1 = len(positive_indices)
+    N2 = len(negative_indices)
+    assert (N1 > 0) and (N2 > 0)
+
+    anchor = Y[anchor_index]
+    positive_centroid = Y[positive_indices].mean()
+    negative_centroid = Y[negative_indices].mean()
+    loss = (
+        np.linalg.norm(anchor - positive_centroid) ** 2
+        - np.linalg.norm(anchor - negative_centroid) ** 2
+    )
+
+    grad = np.zeros_like(Y, dtype=np.float32)
+
+    if loss <= 0:
+        return 0.0, grad
+
+    grad[anchor_index] += 2 * (negative_centroid - positive_centroid)
+    grad[positive_indices] += -2 / N1 * (anchor.reshape(1, -1) - Y[positive_indices])
+    grad[negative_indices] += 2 / N2 * (anchor.reshape(1, -1) - Y[negative_indices])
+
+    return loss, grad
+
+
 def _triplet_loss(anchor_indices, positive_point, negative_point, Y, margin=0.0):
     """Triplet loss among (anchor, pos, neg).
     This loss is calculated for all anchors in `anchor_indices`.
@@ -49,7 +124,7 @@ def _kmean_like(point_indices, centroid, Y):
 
 
 def hierarchical_triplet_loss(
-    Y, tree, margin=0.5, weights=(1.0, 1.0, 0.0), weight_by_level=False
+    Y, tree, margin=0.5, weights=(1.0, 1.0, 0.0), weight_by_level=False, vs_all=True
 ):
     """Hierarchical triplet loss, based on the input `tree`-structure.
     Margin is used as `m = margin * d_{ik}`: distance anchor-negative.
@@ -84,13 +159,22 @@ def hierarchical_triplet_loss(
             if node.parent is None or len(node.items) == 0:
                 continue
 
-            loss_per_node, grad_per_node = _triplet_loss(
-                anchor_indices=node.items,
-                positive_point=node.centroid,
-                negative_point=node.parent.centroid,
-                Y=Y,
-                margin=margin,
-            )
+            if vs_all:
+                loss_per_node, grad_per_node = _triplet_loss_all(
+                    anchor_indices=node.items,
+                    positive_indices=node.items,
+                    negative_indices=node.parent.items,
+                    Y=Y,
+                    margin=margin,
+                )
+            else:
+                loss_per_node, grad_per_node = _triplet_loss(
+                    anchor_indices=node.items,
+                    positive_point=node.centroid,
+                    negative_point=node.parent.centroid,
+                    Y=Y,
+                    margin=margin,
+                )
 
             loss += w1 * node_weight * loss_per_node
             grad += w1 * node_weight * grad_per_node
@@ -107,13 +191,22 @@ def hierarchical_triplet_loss(
                 assert node1.level == node2.level
                 node_weight = max(1, node.level) if weight_by_level else 1
 
-                loss_per_node, grad_per_node = _triplet_loss(
-                    anchor_indices=node1.items,
-                    positive_point=node1.centroid,
-                    negative_point=node2.centroid,
-                    Y=Y,
-                    margin=margin,
-                )
+                if vs_all:
+                    loss_per_node, grad_per_node = _triplet_loss_all(
+                        anchor_indices=node1.items,
+                        positive_indices=node1.items,
+                        negative_indices=node2.items,
+                        Y=Y,
+                        margin=margin,
+                    )
+                else:
+                    loss_per_node, grad_per_node = _triplet_loss(
+                        anchor_indices=node1.items,
+                        positive_point=node1.centroid,
+                        negative_point=node2.centroid,
+                        Y=Y,
+                        margin=margin,
+                    )
                 loss += w2 * node_weight * loss_per_node
                 grad += w2 * node_weight * grad_per_node
 

@@ -59,6 +59,7 @@ def run_hc_tsne(
 
 def main(args):
     dataset_name = args.dataset_name
+    name_suffix = f"d{args.depth}-m{args.margin}"
 
     # load dataset
     (X_train, y_train), (X_test, y_test), label_names = load_dataset(
@@ -72,7 +73,7 @@ def main(args):
         label_names=label_names,
         depth=args.depth,
         label_percent=args.label_percent,
-        tree_name=f"{plot_dir}/tree.png",
+        tree_name=f"{plot_dir}/tree-d{args.depth}.png",
     )
     show_tree(tree)
     # show_iterating_tree(tree)
@@ -100,10 +101,12 @@ def main(args):
         loss_logger=logger,
         rerun=args.rerun1,
     )
+
+    fig_name = f"{plot_dir}/HC-{name_suffix}.png"
     scatter(
-        Z1, None, y_train, None, tree, out_name=f"{plot_dir}/Z1.png", show_group="text"
+        Z1, None, y_train, None, tree=tree, out_name=fig_name, show_group="text",
     )
-    logger.dump(f"{score_dir}/loss.json")
+    logger.dump(f"{score_dir}/loss-{name_suffix}.json")
 
     # test knn score
     # calculate_KNN_score(y_train, Z0, Z1)
@@ -113,8 +116,9 @@ def main(args):
     # calculate_knngain_and_rnx(X=X_train, labels=y_train, Z_init=Z0, Z_new=Z1)
 
     # show loss log
-    logger.load(f"{score_dir}/loss.json")
-    plot_loss(logger.loss, out_name=f"{plot_dir}/loss.png")
+    logger.load(f"{score_dir}/loss-{name_suffix}.json")
+    plot_loss(logger.loss, out_name=f"{plot_dir}/loss-{name_suffix}.png")
+    print(logger.get_loss("htriplet_loss"))
 
 
 def calculate_KNN_score(labels, Z_init, Z_new, K=5):
@@ -144,7 +148,7 @@ params_config = {
         ),
         "hc": dict(weights=(0.5, 0.5, 0.0)),
         "alpha0": 5e-4,
-        "alpha1": 2e-4,
+        "alpha1": 5e-4,
         "alpha2": 7.5e-4,
     },
     "fmnist": {
@@ -161,9 +165,9 @@ params_config = {
             early_exaggeration_iter=0,
         ),
         "hc": dict(weights=(0.5, 0.5, 0.0)),
-        "alpha0": 6e-4,
+        "alpha0": 1e-3,
         "alpha1": 6e-4,
-        "alpha2": 7.5e-4,
+        "alpha2": 1e-2,  # 7.5e-4,
     },
     "cifar10": {
         "Z_init": dict(

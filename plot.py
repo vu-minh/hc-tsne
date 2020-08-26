@@ -10,7 +10,8 @@ def plot_loss(losses: Dict, out_name: str = "loss.png"):
     n_iters = len(losses["htriplet_loss"])
 
     # plot regularization loss in log scale
-    ax.semilogy(
+    # ax.semilogy(
+    ax.plot(
         losses["htriplet_loss"],
         marker=".",
         c=color1,
