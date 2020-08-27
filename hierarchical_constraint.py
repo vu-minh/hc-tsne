@@ -198,20 +198,9 @@ def _generate_constraints_mnist(labels, label_names, depth=0, label_percent=1.0)
     return tree
 
 
-def _generate_constraints_flat(labels, label_names, config, depth=0, label_percent=1.0):
-
+def generate_constraints_flat(labels, label_names, label_percent=1.0):
     H = HierarchicalConstraint(labels, label_names, label_percent)
-
-    # create intermediate groups
-    if depth == 2:
-        ...
-    elif depth == 0:
-        # flat groups: 10 classes under a root node
-        root = label_names
-    else:
-        raise ValueError(f"Hierarchy with depth = {depth} is not supported!")
-
-    tree = H._create_intermediate_node("root", root)
+    tree = H._create_intermediate_node("root", label_names)
     return tree
 
 
