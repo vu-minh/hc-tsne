@@ -65,8 +65,10 @@ if __name__ == "__main__":
     print(args)
 
     # prepare directories for storing figures and dump embeddings.
+    base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][1]
     plot_dir, Z_dir, score_dir = [
-        f"{dir_name}/{args.dataset_name}" for dir_name in ["plots", "Z", "scores"]
+        f"{base_dir}/{dir_name}/{args.dataset_name}"
+        for dir_name in ["plots", "Z", "scores"]
     ]
     for d in [plot_dir, Z_dir, score_dir]:
         if not os.path.exists(d):
