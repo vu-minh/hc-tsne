@@ -45,37 +45,38 @@ def scatter(
     y_test=None,
     tree=None,
     out_name="Z_tree.png",
-    focus=True,
+    focus_factor=2.5,
     width=600,
     height=600,
     show_group=None,
 ):
     # size = 5.0 / np.log(len(Z_init) / 1000)
-    size = 200.0 / np.sqrt(Z_train.shape[0])
+    size = 300.0 / np.sqrt(Z_train.shape[0])
     dpi = plt.rcParams["figure.dpi"]
     fig_width, fig_height = width / dpi, height / dpi
     fig, ax = plt.subplots(1, 1, figsize=(fig_width, fig_height))
     ax.axis("off")
 
     # initial embedding with user groups
-    if focus:
-        _set_limit(ax, Z_train)
-    ax.scatter(*Z_train.T, c=y_train, s=size, cmap="tab10", alpha=0.3)
+    if focus_factor:
+        _set_limit(ax, Z_train, focus_factor)
+    ax.scatter(*Z_train.T, c=y_train, s=size, cmap="tab10", alpha=0.25)
 
+    # annotation for hc-tsne. For other method, pass a flat tree.
     if tree is not None:
         _annotate_groups(tree, Z=Z_train, ax=ax, show_group=show_group)
 
     if Z_test is not None:
         ax.scatter(
-            *Z_test.T, c=y_test, cmap="tab10", alpha=0.7, marker="+", s=(2 * size)
+            *Z_test.T, c=y_test, cmap="tab10", alpha=0.8, marker="+", s=(3 * size)
         )
 
     fig.savefig(out_name, bbox_inches="tight")
 
 
-def _set_limit(ax, Z):
+def _set_limit(ax, Z, focus_factor=2.5):
     mu = np.mean(Z, axis=0)
-    lim = 2.5 * np.std(Z, axis=0)
+    lim = focus_factor * np.std(Z, axis=0)
     ax.set_xlim(mu[0] - lim[0], mu[0] + lim[0])
     ax.set_ylim(mu[1] - lim[1], mu[1] + lim[1])
 
