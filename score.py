@@ -7,11 +7,14 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.neighbors import KNeighborsClassifier
 
 
-def simple_KNN_score(Zs, labels, K=5):
+def simple_KNN_score(Z_dict, labels, logger, K=5):
     """Calculate KNN score with the same `labels` for a list of different embedding `Zs`"""
 
     knn = KNeighborsClassifier(n_neighbors=K, n_jobs=-1, algorithm="auto")
-    return [knn.fit(X=Z, y=labels).score(X=Z, y=labels) for Z in Zs]
+    for name, Z in Z_dict.items():
+        score = knn.fit(X=Z, y=labels).score(X=Z, y=labels)
+        logger.log("knn", score, method=name)
+    del knn
 
 
 @numba.jit(nopython=True)
@@ -160,29 +163,25 @@ def eval_dr_quality(d_hd, d_ld):
     return rnxk, eval_auc(rnxk)
 
 
-def calculate_knngain_and_rnx(X, labels, Z0, Z1, logger):
-    ...
-    # d_hd = squareform(pdist(X, metric="euclidean"), force="tomatrix")
+def calculate_knngain_and_rnx(X, labels, Z_dict, logger):
+    # pairwise distance in HD
+    d_hd = squareform(pdist(X, metric="euclidean"), force="tomatrix")
 
-    # d_ld0 = squareform(pdist(Z0, metric="euclidean"), force="tomatrix")
+    for name, Z in Z_dict.items():
+        # pairwise distance in LD
+        d_ld = squareform(pdist(Z, metric="euclidean"), force="tomatrix")
 
-    # gain0, auc_knn0 = knngain(d_hd, d_ld0, labels)
-    # logger.log()
-    # # print(f"AUC[Gain KNN init]: {auc_knn_init:.3f}")
+        # calculate KNN gain
+        gain, auc_knn = knngain(d_hd, d_ld, labels)
+        logger.log("auc_knn", auc_knn, method=name)
+        logger.log("knn_gain", gain.astype(np.float32).tolist(), method=name)
+        print(name, f"AUC[KNN]: {auc_knn:.3f}")
 
-    # rnx_init, auc_rnx_init = eval_dr_quality(d_hd, d_ld_init)
-    # print(f"AUC[RNX init]: {auc_rnx_init:.3f}")
-    # print(len(rnx_init))
+        # calculate RNX
+        rnx, auc_rnx = eval_dr_quality(d_hd, d_ld)
+        logger.log("auc_rnx", auc_rnx, method=name)
+        logger.log("rnx", rnx.astype(np.float32).tolist(), method=name)
+        print(name, f"AUC[RNX]: {auc_rnx:.3f}")
 
-    # d_ld_new = squareform(pdist(Z_new, metric="euclidean"), force="tomatrix")
-
-    # gain_new, auc_knn_new = knngain(d_hd, d_ld_new, labels)
-    # print(f"AUC[Gain KNN new]: {auc_knn_new:.3f}")
-
-    # rnx_new, auc_rnx_new = eval_dr_quality(d_hd, d_ld_new)
-    # print(f"AUC[RNX new]: {auc_rnx_new:.3f}")
-
-    # return (
-    #     (auc_knn_init, auc_knn_new, auc_rnx_init, auc_rnx_new),
-    #     (gain_init, gain_new, rnx_init, rnx_new),
-    # )
+        del d_ld
+    del d_hd

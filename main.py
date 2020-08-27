@@ -115,25 +115,46 @@ def main(args):
         show_group="text",
     )
 
+    score_name = f"{score_dir}/score-{name_suffix}.json"
+    evaluate_scores(
+        X_train, y_train, X_test, y_test, Z0, Z0_test, Z1, Z1_test, score_name
+    )
+
+
+def evaluate_scores(
+    X_train, y_train, X_test, y_test, Z0, Z0_test, Z1, Z1_test, score_name="score.json"
+):
     # calculate score and log
-    score_logger = ScoreLogger(f"{score_dir}/score-{name_suffix}.json")
+    score_logger = ScoreLogger(score_name)
 
     # test knn score
-    # [k0_train, k1_train] = simple_KNN_score([Z0, Z1], labels=y_train)
-    # [k0_test, k1_test] = simple_KNN_score([Z0_test, Z1_test], labels=y_test)
-    # score_logger.log_dict(
-    #     {
-    #         "k0_train": k0_train,
-    #         "k1_train": k1_train,
-    #         "k0_test": k0_test,
-    #         "k1_test": k1_test,
-    #     }
-    # )
+    simple_KNN_score(
+        Z_dict={"tsne_train": Z0, "hc-tsne_train": Z1},
+        labels=y_train,
+        logger=score_logger,
+    )
+    simple_KNN_score(
+        Z_dict={"tsne_test": Z0_test, "hc-tsne_test": Z1_test},
+        labels=y_test,
+        logger=score_logger,
+    )
 
-    # AUC[RNX] score
-    calculate_knngain_and_rnx(X=X_train, labels=y_train, Z_init=Z0, Z_new=Z1)
+    # AUC[RNX], AUC[KNN] score
+    calculate_knngain_and_rnx(
+        X=X_train,
+        labels=y_train,
+        Z_dict={"tsne_train": Z0, "hc-tsne_train": Z1},
+        logger=score_logger,
+    )
 
-    # score_logger.dump()
+    calculate_knngain_and_rnx(
+        X=X_test,
+        labels=y_test,
+        Z_dict={"tsne_test": Z0_test, "hc-tsne_test": Z1_test},
+        logger=score_logger,
+    )
+
+    score_logger.dump()
     # score_logger.print()
 
 

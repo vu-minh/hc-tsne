@@ -5,9 +5,9 @@ from collections import defaultdict
 
 class ScoreLogger(object):
     def __init__(self, persistance_file_name="score.json", load_persistance_file=False):
-        print(persistance_file_name)
+        print("Create ScoreLogger with persistance file: ", persistance_file_name)
         self.persistance_file_name = persistance_file_name
-        self.scores = defaultdict()
+        self.scores = defaultdict(dict)
 
         # try to load persistance file, if there are data, assign to `self.scores`
         if load_persistance_file and os.path.exists(persistance_file_name):
@@ -18,23 +18,23 @@ class ScoreLogger(object):
                     self.scores = temp_scores
 
     def reset(self):
-        self.scores = defaultdict()
+        self.scores = defaultdict(dict)
 
-    def log(self, key, value):
-        self.scores[key] = value
+    def log(self, key, value, method="default"):
+        self.scores[method][key] = value
 
-    def logs(self, list_key_value):
-        for (k, v) in list_key_value:
-            self.scores[k] = v
+    def logs(self, list_key_value, method="default"):
+        for (key, value) in list_key_value:
+            self.scores[method][key] = value
 
-    def log_dict(self, d):
-        self.scores.update(d)
+    def log_dict(self, d, method="default"):
+        self.scores[method].update(d)
 
-    def score_names(self):
-        return list(self.scores.keys())
+    def score_names(self, method="default"):
+        return list(self.scores[method].keys())
 
-    def get_score(self, key):
-        return self.scores[key]
+    def get_score(self, key, method="default"):
+        return self.scores[method][key]
 
     def dump(self, out_name=None, check_empty=True):
         if check_empty and len(self.scores.keys()) == 0:
