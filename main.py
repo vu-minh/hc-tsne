@@ -8,9 +8,9 @@ from datasets import load_dataset
 from hierarchical_constraint import generate_constraints
 from hierarchical_constraint import show_tree
 from hc_tsne import tsne, hc_tsne
-from loss_logger import LossLogger
+from logger import LossLogger, ScoreLogger
 from plot import scatter, plot_loss
-from score import calculate_knngain_and_rnx
+from score import simple_KNN_score, calculate_knngain_and_rnx
 
 
 def run_tsne(X_train, X_test, config, rerun=True):
@@ -87,7 +87,7 @@ def main(args):
     scatter(Z0, None, y_train, None, out_name=f"{plot_dir}/Z0.png")
 
     # loss logger object to store loss value in each iteration
-    logger = LossLogger()
+    loss_logger = LossLogger(f"{score_dir}/loss-{name_suffix}.json")
 
     # run hc_tsne
     Z1, Z1_test = run_hc_tsne(
@@ -98,38 +98,37 @@ def main(args):
         alpha=alpha,
         margin=args.margin,
         config=config,
-        loss_logger=logger,
+        loss_logger=loss_logger,
         rerun=args.rerun1,
     )
+    loss_logger.dump()
+    plot_loss(loss_logger.loss, out_name=f"{plot_dir}/loss-{name_suffix}.png")
 
     fig_name = f"{plot_dir}/HC-{name_suffix}.png"
     scatter(
         Z1, None, y_train, None, tree=tree, out_name=fig_name, show_group="text",
     )
-    logger.dump(f"{score_dir}/loss-{name_suffix}.json")
+
+    # calculate score and log
+    score_logger = ScoreLogger(f"{score_dir}/score-{name_suffix}.json")
 
     # test knn score
-    # calculate_KNN_score(y_train, Z0, Z1)
-    # calculate_KNN_score(y_test, Z0_test, Z1_test)
+    [k0_train, k1_train] = simple_KNN_score([Z0, Z1], labels=y_train)
+    [k0_test, k1_test] = simple_KNN_score([Z0_test, Z1_test], labels=y_test)
+    score_logger.log_dict(
+        {
+            "k0_train": k0_train,
+            "k1_train": k1_train,
+            "k0_test": k0_test,
+            "k1_test": k1_test,
+        }
+    )
 
     # AUC[RNX] score
     # calculate_knngain_and_rnx(X=X_train, labels=y_train, Z_init=Z0, Z_new=Z1)
 
-    # show loss log
-    logger.load(f"{score_dir}/loss-{name_suffix}.json")
-    plot_loss(logger.loss, out_name=f"{plot_dir}/loss-{name_suffix}.png")
-    print(logger.get_loss("htriplet_loss"))
-
-
-def calculate_KNN_score(labels, Z_init, Z_new, K=5):
-    from sklearn.neighbors import KNeighborsClassifier
-
-    knn = KNeighborsClassifier(n_neighbors=K, n_jobs=-1, algorithm="auto")
-
-    old_score = knn.fit(X=Z_init, y=labels).score(X=Z_init, y=labels)
-    new_score = knn.fit(X=Z_new, y=labels).score(X=Z_new, y=labels)
-
-    print(f"K={K}, old_score={old_score:.3f}, new_score={new_score:.3f}")
+    score_logger.dump()
+    score_logger.print()
 
 
 params_config = {
@@ -167,7 +166,7 @@ params_config = {
         "hc": dict(weights=(0.5, 0.5, 0.0)),
         "alpha0": 1e-3,
         "alpha1": 6e-4,
-        "alpha2": 1e-2,  # 7.5e-4,
+        "alpha2": 7.5e-4,  # 1e-2
     },
     "cifar10": {
         "Z_init": dict(

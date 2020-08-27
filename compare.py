@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
     # load data (can do PCA)
     (X_train, y_train), (X_test, y_test), label_names = load_dataset(
-        args.dataset_name, args.n_train, args.n_test, pca=None, debug=True
+        args.dataset_name, args.n_train, args.n_test, pca=args.pca, debug=True
     )
 
     # create flat tree for easily annotation the group name in the visualization

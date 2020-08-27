@@ -1,11 +1,21 @@
+import os
 import json
 from collections import defaultdict
 
 
 class ScoreLogger(object):
-    def __init__(self, persistance_file_name="score.json"):
+    def __init__(self, persistance_file_name="score.json", load_persistance_file=False):
+        print(persistance_file_name)
         self.persistance_file_name = persistance_file_name
         self.scores = defaultdict()
+
+        # try to load persistance file, if there are data, assign to `self.scores`
+        if load_persistance_file and os.path.exists(persistance_file_name):
+            with open(persistance_file_name, "r") as in_file:
+                temp_scores = json.load(in_file)
+                print(json.dumps(temp_scores, indent=2))
+                if len(temp_scores.keys()) > 0:
+                    self.scores = temp_scores
 
     def reset(self):
         self.scores = defaultdict()
@@ -27,7 +37,7 @@ class ScoreLogger(object):
         return self.scores[key]
 
     def dump(self, out_name=None, check_empty=True):
-        if check_empty and len(self.scores.keys() == 0):
+        if check_empty and len(self.scores.keys()) == 0:
             return
         if out_name is None:
             out_name = self.persistance_file_name
