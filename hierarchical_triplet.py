@@ -5,6 +5,7 @@ import numpy as np
 from anytree import LevelOrderIter, LevelGroupOrderIter
 
 
+# TODO in dev mode: need to review
 def _triplet_loss_all(
     anchor_indices, positive_indices, negative_indices, Y, margin=0.0
 ):
@@ -38,16 +39,27 @@ def _triplet_loss_all(
         )
         grad[violated_anchor_indices] += 2.0 * change
 
+        # TODO Update margin
+
         # update gradient for points in list `positive_indices`
         for positive_index in positive_indices:
             change1 = np.sum(
                 Y[violated_anchor_indices] - Y[positive_index].reshape(1, -1), axis=0
             )
-            grad[positive_index] += -2 / n_pos * change1
+            grad[positive_index] += -2.0 * change1 / n_pos
 
         # update gradient for poitns in list `negative_indices`
+        for negative_index in negative_indices:
+            change2 = np.sum(
+                Y[violated_anchor_indices] - Y[negative_index].reshape(1, -1), axis=0
+            )
+            grad[negative_index] += 2.0 * change2 / n_neg
 
-    return loss / n_anchor, grad / n_anchor
+    # TODO ValueError Regularization too large.-> small alpha?
+    loss /= n_anchor
+    grad /= n_anchor
+    # print(loss, np.linalg.norm(grad))
+    return loss, grad
 
 
 def _triplet_loss_anchor_vs_all(
@@ -124,7 +136,7 @@ def _kmean_like(point_indices, centroid, Y):
 
 
 def hierarchical_triplet_loss(
-    Y, tree, margin=0.5, weights=(1.0, 1.0, 0.0), weight_by_level=False, vs_all=True
+    Y, tree, margin=0.5, weights=(1.0, 1.0, 0.0), weight_by_level=False, vs_all=False
 ):
     """Hierarchical triplet loss, based on the input `tree`-structure.
     Margin is used as `m = margin * d_{ik}`: distance anchor-negative.
