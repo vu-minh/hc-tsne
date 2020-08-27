@@ -106,41 +106,47 @@ def main(args):
 
     fig_name = f"{plot_dir}/HC-{name_suffix}.png"
     scatter(
-        Z1, None, y_train, None, tree=tree, out_name=fig_name, show_group="text",
+        Z1,
+        None,
+        y_train,
+        None,
+        tree=tree,
+        out_name=fig_name,
+        show_group="text",
     )
 
     # calculate score and log
     score_logger = ScoreLogger(f"{score_dir}/score-{name_suffix}.json")
 
     # test knn score
-    [k0_train, k1_train] = simple_KNN_score([Z0, Z1], labels=y_train)
-    [k0_test, k1_test] = simple_KNN_score([Z0_test, Z1_test], labels=y_test)
-    score_logger.log_dict(
-        {
-            "k0_train": k0_train,
-            "k1_train": k1_train,
-            "k0_test": k0_test,
-            "k1_test": k1_test,
-        }
-    )
+    # [k0_train, k1_train] = simple_KNN_score([Z0, Z1], labels=y_train)
+    # [k0_test, k1_test] = simple_KNN_score([Z0_test, Z1_test], labels=y_test)
+    # score_logger.log_dict(
+    #     {
+    #         "k0_train": k0_train,
+    #         "k1_train": k1_train,
+    #         "k0_test": k0_test,
+    #         "k1_test": k1_test,
+    #     }
+    # )
 
     # AUC[RNX] score
-    # calculate_knngain_and_rnx(X=X_train, labels=y_train, Z_init=Z0, Z_new=Z1)
+    calculate_knngain_and_rnx(X=X_train, labels=y_train, Z_init=Z0, Z_new=Z1)
 
-    score_logger.dump()
-    score_logger.print()
+    # score_logger.dump()
+    # score_logger.print()
 
 
 params_config = {
     "mnist": {
         "Z_init": dict(
-            perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2
+            perplexity=50, n_iter=500, random_state=2020, n_jobs=-1, verbose=2
         ),
         "Z_new": dict(
             perplexity=100,
             n_iter=100,
             random_state=2020,
-            n_jobs=-2,
+            n_jobs=-1,
             verbose=2,
             callbacks_every_iters=10,
             early_exaggeration_iter=0,
@@ -210,8 +216,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
+    base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][1]
     plot_dir, Z_dir, score_dir = [
-        f"{dir_name}/{args.dataset_name}" for dir_name in ["plots", "Z", "scores"]
+        f"{base_dir}/{dir_name}/{args.dataset_name}"
+        for dir_name in ["plots", "Z", "scores"]
     ]
     for d in [plot_dir, Z_dir, score_dir]:
         if not os.path.exists(d):

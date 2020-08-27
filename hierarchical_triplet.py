@@ -66,7 +66,7 @@ def _triplet_loss_anchor_vs_all(
     anchor_index, positive_indices, negative_indices, Y, margin=0.0
 ):
     """Triplet loss among an `anchor_index`, all `possitive_indices`
-        and all `negative_indices`.
+    and all `negative_indices`.
     """
     N1 = len(positive_indices)
     N2 = len(negative_indices)

@@ -8,8 +8,7 @@ from sklearn.neighbors import KNeighborsClassifier
 
 
 def simple_KNN_score(Zs, labels, K=5):
-    """Calculate KNN score with the same `labels` for a list of different embedding `Zs`
-    """
+    """Calculate KNN score with the same `labels` for a list of different embedding `Zs`"""
 
     knn = KNeighborsClassifier(n_neighbors=K, n_jobs=-1, algorithm="auto")
     return [knn.fit(X=Z, y=labels).score(X=Z, y=labels) for Z in Zs]
@@ -161,19 +160,21 @@ def eval_dr_quality(d_hd, d_ld):
     return rnxk, eval_auc(rnxk)
 
 
-def calculate_knngain_and_rnx(X, labels, Z_init, Z_new):
-    d_hd = squareform(pdist(X, metric="euclidean"), force="tomatrix")
+def calculate_knngain_and_rnx(X, labels, Z0, Z1, logger):
+    ...
+    # d_hd = squareform(pdist(X, metric="euclidean"), force="tomatrix")
 
-    d_ld_init = squareform(pdist(Z_init, metric="euclidean"), force="tomatrix")
+    # d_ld0 = squareform(pdist(Z0, metric="euclidean"), force="tomatrix")
 
-    # gain_init, auc_knn_init = knngain(d_hd, d_ld_init, labels)
-    # print(f"AUC[Gain KNN init]: {auc_knn_init:.3f}")
+    # gain0, auc_knn0 = knngain(d_hd, d_ld0, labels)
+    # logger.log()
+    # # print(f"AUC[Gain KNN init]: {auc_knn_init:.3f}")
 
-    rnx_init, auc_rnx_init = eval_dr_quality(d_hd, d_ld_init)
-    print(f"AUC[RNX init]: {auc_rnx_init:.3f}")
-    print(len(rnx_init.shape))
+    # rnx_init, auc_rnx_init = eval_dr_quality(d_hd, d_ld_init)
+    # print(f"AUC[RNX init]: {auc_rnx_init:.3f}")
+    # print(len(rnx_init))
 
-    d_ld_new = squareform(pdist(Z_new, metric="euclidean"), force="tomatrix")
+    # d_ld_new = squareform(pdist(Z_new, metric="euclidean"), force="tomatrix")
 
     # gain_new, auc_knn_new = knngain(d_hd, d_ld_new, labels)
     # print(f"AUC[Gain KNN new]: {auc_knn_new:.3f}")

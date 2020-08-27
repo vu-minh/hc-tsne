@@ -16,7 +16,13 @@ def run(args, flat_tree):
 
     out_name = f"{plot_dir}/{args.method}.png"
     scatter(
-        Z0, None, y_train, y_test, tree=flat_tree, out_name=out_name, show_group="text",
+        Z0,
+        None,
+        y_train,
+        y_test,
+        tree=flat_tree,
+        out_name=out_name,
+        show_group="text",
     )
 
     print(args.method, "KNN(5) score")
