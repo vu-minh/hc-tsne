@@ -9,15 +9,16 @@ from hierarchical_constraint import generate_constraints_flat
 from plot import scatter
 from logger import ScoreLogger
 from score import evaluate_scores
+from catsne import catsne
 
 
 def run(args, flat_tree):
-    run_func = {"nca": run_nca, "umap": run_umap}[args.method]
+    run_func = {"nca": run_nca, "umap": run_umap, "catsne": run_catsne}[args.method]
     Z, Z_test = run_func(args)
 
     scatter(
         Z,
-        None,
+        None, # Z_test
         y_train,
         y_test,
         tree=flat_tree,
@@ -30,7 +31,7 @@ def run(args, flat_tree):
     evaluate_scores(
         X_train, y_train, X_test, y_test, Z, Z_test, args.method, score_logger
     )
-    
+
     # important: save the logger filer
     score_logger.dump()
     score_logger.print()
@@ -52,6 +53,11 @@ def run_umap(args):
     Z = mapper.embedding_
     Z_test = mapper.transform(X_test)
     return Z, Z_test
+
+
+def run_catsne(args):
+    Z, _ = catsne(X_train, y_train)
+    return Z, None
 
 
 if __name__ == "__main__":
@@ -85,7 +91,7 @@ if __name__ == "__main__":
 
     # load data (can do PCA)
     (X_train, y_train), (X_test, y_test), label_names = load_dataset(
-        args.dataset_name, args.n_train, args.n_test, pca=None, debug=True
+        args.dataset_name, args.n_train, args.n_test, pca=args.pca, debug=True
     )
 
     # create flat tree for easily annotation the group name in the visualization
