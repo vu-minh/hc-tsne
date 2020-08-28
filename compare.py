@@ -30,10 +30,11 @@ def run(args, flat_tree):
     evaluate_scores(
         X_train, y_train, X_test, y_test, Z, Z_test, args.method, score_logger
     )
-    
+
     # important: save the logger filer
-    score_logger.dump()
-    score_logger.print()
+    if score_logger is not None:
+        score_logger.dump()
+        score_logger.print()
 
 
 def run_nca(args):
