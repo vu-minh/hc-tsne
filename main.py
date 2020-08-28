@@ -40,11 +40,11 @@ def run_tsne(config, score_logger, rerun=True):
 def run_hc_tsne(Z_init, tree, alpha, margin, config, score_logger, rerun=False):
     Z1_name, Z1_test_name = f"{Z_dir}/Z1.z", f"{Z_dir}/Z1_test.z"
     loss_name = f"{score_dir}/loss-{name_suffix}.json"
+    loss_logger = LossLogger(loss_name)
 
     if rerun or not os.path.exists(Z1_name):
         print("\n[DEBUG]Run Hierarchical TSNE with ", config["Z_new"])
 
-        loss_logger = LossLogger(loss_name)
         Z1 = hc_tsne(
             X_train,
             initialization=Z_init,
@@ -56,19 +56,18 @@ def run_hc_tsne(Z_init, tree, alpha, margin, config, score_logger, rerun=False):
             **config["Z_new"],
         )
         Z1_test = Z1.transform(X_test)
-
+        loss_logger.dump()
         joblib.dump(np.array(Z1), Z1_name)
         joblib.dump(np.array(Z1_test), Z1_test_name)
-
-        loss_logger.dump()
-        plot_loss(loss_logger.loss, out_name=f"{plot_dir}/loss-{name_suffix}.png")
-
     else:
         Z1 = joblib.load(Z1_name)
         Z1_test = joblib.load(Z1_test_name)
 
     fig_name = f"{plot_dir}/HC-{name_suffix}.png"
     scatter(Z1, None, y_train, None, tree=tree, out_name=fig_name)
+
+    loss_logger.load(loss_name)
+    plot_loss(loss_logger.loss, out_name=f"{plot_dir}/loss-{name_suffix}.png")
 
     if score_logger is not None:
         evaluate_scores(
@@ -111,8 +110,9 @@ def main(args):
     )
 
     # important: save the logger filer
-    score_logger.dump()
-    score_logger.print()
+    if score_logger is not None:
+        score_logger.dump()
+        score_logger.print()
 
 
 params_config = {
@@ -144,6 +144,7 @@ params_config = {
             random_state=2020,
             n_jobs=-2,
             verbose=2,
+            use_callbacks=True,
             callbacks_every_iters=10,
             early_exaggeration_iter=0,
         ),
