@@ -7,78 +7,47 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.neighbors import KNeighborsClassifier
 
 
-def evaluate_scores(
-    X_train, y_train, X_test, y_test, Z0, Z0_test, Z1, Z1_test, score_name="score.json"
-):
-    # calculate score and log
-    score_logger = ScoreLogger(score_name)
+def evaluate_scores(X_train, y_train, X_test, y_test, Z_train, Z_test, method, logger):
+    print("[DEBUG] Calculate KNN score")
+    if Z_train is not None:
+        KNN_score(Z_train, y_train, f"{method}_train", logger)
 
-    # test knn score
-    if None not in (Z0, Z1):
-        simple_KNN_score(
-            Z_dict={"tsne_train": Z0, "hc-tsne_train": Z1},
-            labels=y_train,
-            logger=score_logger,
-        )
-    if None not in (Z0_test, Z1_test):
-        simple_KNN_score(
-            Z_dict={"tsne_test": Z0_test, "hc-tsne_test": Z1_test},
-            labels=y_test,
-            logger=score_logger,
-        )
+    if Z_test is not None:
+        KNN_score(Z_test, y_test, f"{method}_test", logger)
 
-    # AUC[RNX], AUC[KNN] score
-    if None not in (X_train, y_train, Z0, Z1):
-        calculate_knngain_and_rnx(
-            X=X_train,
-            labels=y_train,
-            Z_dict={"tsne_train": Z0, "hc-tsne_train": Z1},
-            logger=score_logger,
-        )
-    if None not in (X_test, y_test, Z0_test, Z1_test):
-        calculate_knngain_and_rnx(
-            X=X_test,
-            labels=y_test,
-            Z_dict={"tsne_test": Z0_test, "hc-tsne_test": Z1_test},
-            logger=score_logger,
-        )
+    print("[DEBUG] Calculate AUC[RNX] and AUC[KNN] scores")
+    if not all([X_train is None, y_train is None, Z_train is None]):
+        knngain_and_rnx(X_train, y_train, Z_train, f"{method}_train", logger)
 
-    score_logger.dump()
-    # score_logger.print()
+    if not all([X_test is None, y_test is None, Z_test is None]):
+        knngain_and_rnx(X_test, y_test, Z_test, f"{method}_test", logger)
 
 
-def simple_KNN_score(Z_dict, labels, logger, K=5):
-    """Calculate KNN score with the same `labels` for a list of different embedding `Zs`"""
-
+def KNN_score(Z, labels, method, logger, K=10):
     knn = KNeighborsClassifier(n_neighbors=K, n_jobs=-1, algorithm="auto")
-    for name, Z in Z_dict.items():
-        score = knn.fit(X=Z, y=labels).score(X=Z, y=labels)
-        logger.log("knn", score, method=name)
+    score = knn.fit(X=Z, y=labels).score(X=Z, y=labels)
+    logger.log(f"knn{K}", score, method)
     del knn
 
 
-def calculate_knngain_and_rnx(X, labels, Z_dict, logger):
-    # pairwise distance in HD
+def knngain_and_rnx(X, labels, Z, method, logger):
+    # pairwise distance in HD and LD
     d_hd = squareform(pdist(X, metric="euclidean"), force="tomatrix")
+    d_ld = squareform(pdist(Z, metric="euclidean"), force="tomatrix")
 
-    for name, Z in Z_dict.items():
-        # pairwise distance in LD
-        d_ld = squareform(pdist(Z, metric="euclidean"), force="tomatrix")
+    # calculate KNN gain
+    gain, auc_knn = knngain(d_hd, d_ld, labels)
+    logger.log("auc_knn", auc_knn, method)
+    logger.log("knn_gain", gain.astype(np.float32).tolist(), method)
+    print(method, f"AUC[KNN]: {auc_knn:.3f}")
 
-        # calculate KNN gain
-        gain, auc_knn = knngain(d_hd, d_ld, labels)
-        logger.log("auc_knn", auc_knn, method=name)
-        logger.log("knn_gain", gain.astype(np.float32).tolist(), method=name)
-        print(name, f"AUC[KNN]: {auc_knn:.3f}")
+    # calculate RNX
+    rnx, auc_rnx = eval_dr_quality(d_hd, d_ld)
+    logger.log("auc_rnx", auc_rnx, method)
+    logger.log("rnx", rnx.astype(np.float32).tolist(), method)
+    print(method, f"AUC[RNX]: {auc_rnx:.3f}")
 
-        # calculate RNX
-        rnx, auc_rnx = eval_dr_quality(d_hd, d_ld)
-        logger.log("auc_rnx", auc_rnx, method=name)
-        logger.log("rnx", rnx.astype(np.float32).tolist(), method=name)
-        print(name, f"AUC[RNX]: {auc_rnx:.3f}")
-
-        del d_ld
-    del d_hd
+    del d_hd, d_ld
 
 
 @numba.jit(nopython=True)

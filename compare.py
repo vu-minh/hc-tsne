@@ -25,9 +25,17 @@ def run(args, flat_tree):
         show_group="text",
     )
 
-    print(args.method, "KNN(5) score")
-    simple_KNN_score([Z0], y_train)
-    simple_KNN_score([Z1], y_test)
+    evaluate_scores(
+        X_train,
+        y_train,
+        X_test,
+        y_test,
+        Z0,
+        Z0_test,
+        Z1,
+        Z1_test,
+        score_name="score.json",
+    )
 
 
 def run_nca(args):
@@ -36,16 +44,16 @@ def run_nca(args):
     )
     nca.fit(X_train, y_train)
     Z0 = nca.transform(X_train)
-    Z1 = nca.transform(X_test)
-    return Z0, Z1
+    Z0_test = nca.transform(X_test)
+    return Z0, Z0_test
 
 
 def run_umap(args):
     mapper = UMAP(n_neighbors=args.n_neighbors)
     mapper.fit(X_train, y=y_train)
     Z0 = mapper.embedding_
-    Z1 = mapper.transform(X_test)
-    return Z0, Z1
+    Z0_test = mapper.transform(X_test)
+    return Z0, Z0_test
 
 
 if __name__ == "__main__":

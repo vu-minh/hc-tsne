@@ -53,7 +53,7 @@ def scatter(
     focus_factor=2.5,
     width=600,
     height=600,
-    show_group=None,
+    show_group="text",
 ):
     # size = 5.0 / np.log(len(Z_init) / 1000)
     size = 300.0 / np.sqrt(Z_train.shape[0])

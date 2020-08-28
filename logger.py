@@ -1,21 +1,20 @@
 import os
 import json
+from datetime import datetime
 from collections import defaultdict
 
 
-class ScoreLogger(object):
-    def __init__(self, persistance_file_name="score.json", load_persistance_file=False):
-        print("Create ScoreLogger with persistance file: ", persistance_file_name)
-        self.persistance_file_name = persistance_file_name
-        self.scores = defaultdict(dict)
+def now():
+    return f"{datetime.now():%Y-%m-%d %H:%M:%S%z}"
 
-        # try to load persistance file, if there are data, assign to `self.scores`
-        if load_persistance_file and os.path.exists(persistance_file_name):
-            with open(persistance_file_name, "r") as in_file:
-                temp_scores = json.load(in_file)
-                print(json.dumps(temp_scores, indent=2))
-                if len(temp_scores.keys()) > 0:
-                    self.scores = temp_scores
+
+class ScoreLogger(object):
+    def __init__(self, persistance_file_name=None):
+        self.persistance_file_name = persistance_file_name
+        print("[DEBUG] ScoreLogger @", persistance_file_name)
+
+        self.scores = defaultdict(dict)
+        self.scores["meta"]["create_time"] = now()
 
     def reset(self):
         self.scores = defaultdict(dict)
@@ -37,21 +36,27 @@ class ScoreLogger(object):
         return self.scores[method][key]
 
     def dump(self, out_name=None, check_empty=True):
-        if check_empty and len(self.scores.keys()) == 0:
+        if check_empty and len(self.scores.keys()) <= 1:  # meta key
             return
+
         if out_name is None:
             out_name = self.persistance_file_name
+
+        self.scores["meta"]["finish_time"] = now()
         with open(out_name, "w") as out_file:
             json.dump(self.scores, out_file, indent=2)
 
-    def load(self, in_name=None):
-        if in_name is None:
-            in_name = self.persistance_file_name
+    def load(self, in_name):
         with open(in_name, "r") as in_file:
             self.scores = json.load(in_file)
 
     def print(self):
-        print(json.dumps(self.scores, indent=2))
+        print("\n[DEBUG] ScoreLogger @", self.persistance_file_name)
+        temp_scores = {
+            k0: {k1: v1 for k1, v1 in v0.items() if not isinstance(v1, list)}
+            for k0, v0 in self.scores.items()
+        }
+        print(json.dumps(temp_scores, indent=2))
 
 
 class LossLogger(object):
