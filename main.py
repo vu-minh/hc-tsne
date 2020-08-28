@@ -144,7 +144,6 @@ params_config = {
             random_state=2020,
             n_jobs=-2,
             verbose=2,
-            use_callbacks=True,
             callbacks_every_iters=10,
             early_exaggeration_iter=0,
         ),
