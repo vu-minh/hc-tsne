@@ -8,15 +8,14 @@ def plot_loss(losses: Dict, out_name: str = "loss.png"):
     if len(losses.keys()) == 0:
         return
 
-    fig, ax = plt.subplots(1, 1, figsize=(6, 2.5))
+    fig, ax = plt.subplots(1, 1, figsize=(4.5, 1.8))
     ax.set_xlabel("Iterations")
     color1, color2 = ["tab:blue", "tab:red"]
     n_iters = len(losses["htriplet_loss"])
 
     # plot regularization loss in log scale
     if len(losses["htriplet_loss"]) > 0:
-        # ax.semilogy(
-        ax.plot(
+        ax.semilogy(  # ax.plot(
             losses["htriplet_loss"],
             marker=".",
             c=color1,
@@ -27,19 +26,21 @@ def plot_loss(losses: Dict, out_name: str = "loss.png"):
 
     # plot new kl_loss
     kl_loss = losses["new_loss"]
+    print("[DEBUG] new loss: ", len(kl_loss))
     if len(kl_loss) > 0:
         ax2 = ax.twinx()  # share x-axis
         ax2.set_ylim(top=1.1 * max(kl_loss), bottom=0.9 * min(kl_loss))
         ax2.plot(
-            [i * 50 for i in range(n_iters // 50 + 1)],
+            [i * 10 for i in range(n_iters // 10 + 1)],
             kl_loss[:-1],
             marker="^",
             c=color2,
-            label="New HC-tSNE loss",
+            label="New HCt-SNE loss",
+            # markevery=[i * 10 for i in range(n_iters // 10 + 1)],
         )
         ax2.tick_params(axis="y", labelcolor=color2)
 
-    fig.legend(loc="upper right", bbox_to_anchor=(0.85, 0.98))
+    fig.legend(loc="upper right", bbox_to_anchor=(0.88, 1.08))
     fig.savefig(out_name, bbox_inches="tight")
 
 
