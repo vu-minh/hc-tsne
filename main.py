@@ -30,9 +30,7 @@ def run_tsne(config, score_logger, rerun=True):
     scatter(Z0, None, y_train, None, out_name=f"{plot_dir}/Z0.png", show_group=None)
 
     if score_logger is not None:
-        evaluate_scores(
-            X_train, y_train, X_test, y_test, Z0, Z0_test, "tsne", score_logger
-        )
+        evaluate_scores(X_train, y_train, X_test, y_test, Z0, Z0_test, "tsne", score_logger)
 
     return Z0, Z0_test  # Z0 is used an initialization in hc_tsne
 
@@ -70,9 +68,7 @@ def run_hc_tsne(Z_init, tree, alpha, margin, config, score_logger, rerun=False):
     plot_loss(loss_logger.loss, out_name=f"{plot_dir}/loss-{name_suffix}.png")
 
     if score_logger is not None:
-        evaluate_scores(
-            X_train, y_train, X_test, y_test, Z1, Z1_test, "hc-tsne", score_logger
-        )
+        evaluate_scores(X_train, y_train, X_test, y_test, Z1, Z1_test, "hc-tsne", score_logger)
 
 
 def main(args):
@@ -84,9 +80,7 @@ def main(args):
     score_logger = None if args.no_score else ScoreLogger(score_name)
 
     # run original tsne
-    Z0, _ = run_tsne(
-        config=config["Z_init"], score_logger=score_logger, rerun=args.rerun0
-    )
+    Z0, _ = run_tsne(config=config["Z_init"], score_logger=score_logger, rerun=args.rerun0)
 
     # build hierarchical constraint in tree form
     tree = generate_constraints(
@@ -95,7 +89,7 @@ def main(args):
         label_names=label_names,
         depth=args.depth,
         label_percent=args.label_percent,
-        tree_name=f"{plot_dir}/tree-d{args.depth}.png",
+        tree_name=f"{plot_dir}/tree-d{args.depth}.pdf",
     )
     show_tree(tree)
 
@@ -117,9 +111,7 @@ def main(args):
 
 params_config = {
     "mnist": {
-        "Z_init": dict(
-            perplexity=50, n_iter=500, random_state=2020, n_jobs=-1, verbose=2
-        ),
+        "Z_init": dict(perplexity=50, n_iter=500, random_state=2020, n_jobs=-1, verbose=2),
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
@@ -135,9 +127,7 @@ params_config = {
         "alpha2": 7.5e-4,
     },
     "fmnist": {
-        "Z_init": dict(
-            perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2
-        ),
+        "Z_init": dict(perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2),
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
@@ -153,9 +143,7 @@ params_config = {
         "alpha2": 7.5e-4,  # 1e-2
     },
     "cifar10": {
-        "Z_init": dict(
-            perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2
-        ),
+        "Z_init": dict(perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2),
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
@@ -196,10 +184,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-    base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][1]
+    base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][0]
     plot_dir, Z_dir, score_dir = [
-        f"{base_dir}/{dir_name}/{args.dataset_name}"
-        for dir_name in ["plots", "Z", "scores"]
+        f"{base_dir}/{dir_name}/{args.dataset_name}" for dir_name in ["plots", "Z", "scores"]
     ]
     for d in [plot_dir, Z_dir, score_dir]:
         if not os.path.exists(d):
