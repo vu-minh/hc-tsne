@@ -184,7 +184,7 @@ if __name__ == "__main__":
     argm("--no-score", action="store_true", help="Do not calculate metric scores")
 
     argm("--dataset_name", "-d")
-    argm("--pca", default=0.9, type=float, help="Run PCA on raw data")
+    argm("--pca", default=0.95, type=float, help="Run PCA on raw data")
     argm("--n_train", default=10000, type=int, help="# datapoints for training set")
     argm("--n_test", default=5000, type=int, help="# datasetpoints fro test set")
 
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     name_suffix = f"d{args.depth}-m{args.margin}"
 
     (X_train, y_train), (X_test, y_test), label_names = load_dataset(
-        args.dataset_name, args.n_train, args.n_test, args.pca, debug=True
+        args.dataset_name, args.n_train, args.n_test, pca=args.pca, debug=True
     )
 
     main(args)

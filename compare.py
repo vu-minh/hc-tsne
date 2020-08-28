@@ -7,35 +7,33 @@ from umap import UMAP
 from datasets import load_dataset
 from hierarchical_constraint import generate_constraints_flat
 from plot import scatter
-from score import simple_KNN_score
+from logger import ScoreLogger
+from score import evaluate_scores
 
 
 def run(args, flat_tree):
     run_func = {"nca": run_nca, "umap": run_umap}[args.method]
-    Z0, Z1 = run_func(args)
+    Z, Z_test = run_func(args)
 
-    out_name = f"{plot_dir}/{args.method}.png"
     scatter(
-        Z0,
+        Z,
         None,
         y_train,
         y_test,
         tree=flat_tree,
-        out_name=out_name,
+        out_name=f"{plot_dir}/{args.method}.png",
         show_group="text",
     )
 
+    score_name = f"{score_dir}/score-{args.method}.json"
+    score_logger = None if args.no_score else ScoreLogger(score_name)
     evaluate_scores(
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        Z0,
-        Z0_test,
-        Z1,
-        Z1_test,
-        score_name="score.json",
+        X_train, y_train, X_test, y_test, Z, Z_test, args.method, score_logger
     )
+    
+    # important: save the logger filer
+    score_logger.dump()
+    score_logger.print()
 
 
 def run_nca(args):
@@ -43,17 +41,17 @@ def run_nca(args):
         n_components=2, init=args.nca_init, max_iter=100, verbose=2, random_state=42
     )
     nca.fit(X_train, y_train)
-    Z0 = nca.transform(X_train)
-    Z0_test = nca.transform(X_test)
-    return Z0, Z0_test
+    Z = nca.transform(X_train)
+    Z_test = nca.transform(X_test)
+    return Z, Z_test
 
 
 def run_umap(args):
-    mapper = UMAP(n_neighbors=args.n_neighbors)
+    mapper = UMAP(n_neighbors=args.n_neighbors, verbose=1)
     mapper.fit(X_train, y=y_train)
-    Z0 = mapper.embedding_
-    Z0_test = mapper.transform(X_test)
-    return Z0, Z0_test
+    Z = mapper.embedding_
+    Z_test = mapper.transform(X_test)
+    return Z, Z_test
 
 
 if __name__ == "__main__":
@@ -63,10 +61,13 @@ if __name__ == "__main__":
     argm = parser.add_argument
 
     argm("--dataset_name", "-d")
+    argm("--no-score", action="store_true", help="Do not calculate metric scores")
     argm("--method", "-m", default="nca", help="Run different methods like umap, nca")
-    argm("--pca", default=0.9, type=float, help="Run PCA on raw data")
+
+    argm("--pca", default=0.95, type=float, help="Run PCA on raw data")
     argm("--n_train", default=10000, type=int, help="# datapoints for training set")
     argm("--n_test", default=5000, type=int, help="# datasetpoints fro test set")
+
     argm("--nca_init", default="auto", help="NCA initialization params: auto, pca, lda")
     argm("--n_neighbors", default=10, type=int, help="UMAP n_neighbors")
     args = parser.parse_args()
@@ -84,7 +85,7 @@ if __name__ == "__main__":
 
     # load data (can do PCA)
     (X_train, y_train), (X_test, y_test), label_names = load_dataset(
-        args.dataset_name, args.n_train, args.n_test, pca=args.pca, debug=True
+        args.dataset_name, args.n_train, args.n_test, pca=None, debug=True
     )
 
     # create flat tree for easily annotation the group name in the visualization
