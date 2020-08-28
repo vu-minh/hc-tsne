@@ -3,9 +3,10 @@
 from functools import partial
 
 import numpy as np
-from openTSNE import TSNE  # TSNEEmbedding
 from openTSNE import _tsne
+from openTSNE import TSNE  # TSNEEmbedding
 from openTSNE.quad_tree import QuadTree
+from openTSNE.callbacks import ErrorLogger
 from hierarchical_triplet import hierarchical_triplet_loss
 
 EPSILON = np.finfo(np.float64).eps
@@ -58,6 +59,7 @@ def hc_tsne(
     # run openTSNE with custom negative gradient function
     tsne = TSNE(
         initialization=initialization,
+        callbacks=ErrorLogger(),  # use this to evaluate kl_loss at every 10 iterations
         negative_gradient_method=partial(
             my_kl_divergence_bh,
             list_regularizers=[(alpha, tree_regularizer)],
