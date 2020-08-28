@@ -16,10 +16,10 @@ def evaluate_scores(X_train, y_train, X_test, y_test, Z_train, Z_test, method, l
         KNN_score(Z_test, y_test, f"{method}_test", logger)
 
     print("[DEBUG] Calculate AUC[RNX] and AUC[KNN] scores")
-    if not all([X_train is None, y_train is None, Z_train is None]):
+    if all([X_train is not None, y_train is not None, Z_train is not None]):
         knngain_and_rnx(X_train, y_train, Z_train, f"{method}_train", logger)
 
-    if not all([X_test is None, y_test is None, Z_test is None]):
+    if all([X_test is not None, y_test is not None, Z_test is not None]):
         knngain_and_rnx(X_test, y_test, Z_test, f"{method}_test", logger)
 
 
