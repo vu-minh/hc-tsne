@@ -121,3 +121,98 @@ def _annotate_groups(tree, Z, ax, show_group="all"):
             _annotate_node(
                 node, Z, ax, show_group, edgecolor="g", linestyle="--", alpha=0.3
             )
+
+
+def plot_samples(imgs, labels, class_id, n_samples=100, out_name="sample.png"):
+    import math
+
+    n_rows = int(math.sqrt(n_samples))
+    plt.figure(figsize=(20, 20))
+    n_plot = 1
+
+    for i, (img, lbl) in enumerate(zip(imgs, labels)):
+        if lbl == class_id:
+            plt.subplot(n_rows, n_rows, n_plot)
+            plt.imshow(img.reshape(32, 32, 3))
+            plt.gca().set_title(i)
+            plt.axis("off")
+            n_plot += 1
+            if n_plot > n_samples:
+                break
+
+    plt.savefig(out_name)
+
+
+def demo_l2_distance(img1, img2, img3, plot_dir="plots"):
+    for img, name in zip([img1, img2, img3], ["airplane1", "airplane2", "bird1"]):
+        plt.figure(figsize=(1, 1))
+        plt.imshow(img.reshape((32, 32, 3)))
+        plt.axis("off")
+        plt.savefig(f"{plot_dir}/{name}.png")
+
+    d12 = np.linalg.norm(img1 - img2) ** 2
+    d13 = np.linalg.norm(img1 - img3) ** 2
+
+    print(f"d12: {d12:.3f}", f"d13: {d13:.3f}")
+
+
+def image_grid(imgs, Z, img_size=32, n_img=20, out_name="grid.png"):
+    # Ref: h ttps://github.com/prabodhhere/tsne-grid
+    from tensorflow.python.keras.preprocessing import image
+    from scipy.spatial.distance import cdist
+    from lapjv import lapjv
+
+    grid = np.dstack(
+        np.meshgrid(np.linspace(0, 1, n_img), np.linspace(0, 1, n_img))
+    ).reshape(-1, 2)
+    cost_matrix = cdist(grid, Z, "sqeuclidean").astype(np.float32)
+    cost_matrix = cost_matrix * (100000 / cost_matrix.max())
+    row_asses, col_asses, _ = lapjv(cost_matrix)
+    grid_jv = grid[col_asses]
+    out = np.ones((n_img * img_size, n_img * img_size, 3))
+
+    to_plot = np.square(n_img)
+    for pos, img in zip(grid_jv, imgs[0:to_plot]):
+        h_range = int(np.floor(pos[0] * (n_img - 1) * img_size))
+        w_range = int(np.floor(pos[1] * (n_img - 1) * img_size))
+        out[h_range : h_range + img_size, w_range : w_range + img_size] = img.reshape(
+            (32, 32, 3)
+        )
+
+    im = image.array_to_img(out)
+    im.save(out_name, quality=100)
+
+
+def plot_rnx_gnn(score_dir, out_name="rnx_gnn.png"):
+    import json
+    from collections import defaultdict
+
+    score1 = f"{score_dir}/score-d2-m0.5.json"
+    score_umap = f"{score_dir}/score-umap.json"
+    score_catsne = f"{score_dir}/score-catsne.json"
+    all_scores = defaultdict(dict)
+
+    with open(score1, "r") as f1:
+        s1 = json.load(f1)
+        all_scores.update(s1)
+
+    with open(score_umap, "r") as f2:
+        s2 = json.load(f2)
+        all_scores.update(s2)
+
+    with open(score_catsne, "r") as f3:
+        s3 = json.load(f3)
+        all_scores.update(s3)
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 3.5))
+    correct_name = lambda name: {"auc_knn_gain": "auc_knn"}.get(name, name)
+
+    for metric_name, ax in zip(["rnx", "knn_gain"], axes.ravel()):
+        for method in ["tsne", "hc-tsne", "umap", "catsne"]:
+            scores = all_scores[f"{method}_train"][metric_name]
+            auc = all_scores[f"{method}_train"][correct_name(f"auc_{metric_name}")]
+            label = f"{method} auc={auc:.3f}"
+            ax.semilogx(scores, label=label)
+        ax.legend()
+        ax.set_title(metric_name.upper())
+    fig.savefig(out_name)

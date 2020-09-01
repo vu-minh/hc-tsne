@@ -30,7 +30,9 @@ def run_tsne(config, score_logger, rerun=True):
     scatter(Z0, None, y_train, None, out_name=f"{plot_dir}/Z0.png", show_group=None)
 
     if score_logger is not None:
-        evaluate_scores(X_train, y_train, X_test, y_test, Z0, Z0_test, "tsne", score_logger)
+        evaluate_scores(
+            X_train, y_train, X_test, y_test, Z0, Z0_test, "tsne", score_logger
+        )
 
     return Z0, Z0_test  # Z0 is used an initialization in hc_tsne
 
@@ -68,7 +70,9 @@ def run_hc_tsne(Z_init, tree, alpha, margin, config, score_logger, rerun=False):
     plot_loss(loss_logger.loss, out_name=f"{plot_dir}/loss-{name_suffix}.png")
 
     if score_logger is not None:
-        evaluate_scores(X_train, y_train, X_test, y_test, Z1, Z1_test, "hc-tsne", score_logger)
+        evaluate_scores(
+            X_train, y_train, X_test, y_test, Z1, Z1_test, "hc-tsne", score_logger
+        )
 
 
 def main(args):
@@ -80,7 +84,9 @@ def main(args):
     score_logger = None if args.no_score else ScoreLogger(score_name)
 
     # run original tsne
-    Z0, _ = run_tsne(config=config["Z_init"], score_logger=score_logger, rerun=args.rerun0)
+    Z0, _ = run_tsne(
+        config=config["Z_init"], score_logger=score_logger, rerun=args.rerun0
+    )
 
     # build hierarchical constraint in tree form
     tree = generate_constraints(
@@ -111,7 +117,9 @@ def main(args):
 
 params_config = {
     "mnist": {
-        "Z_init": dict(perplexity=50, n_iter=500, random_state=2020, n_jobs=-1, verbose=2),
+        "Z_init": dict(
+            perplexity=50, n_iter=500, random_state=2020, n_jobs=-1, verbose=2
+        ),
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
@@ -127,7 +135,9 @@ params_config = {
         "alpha2": 7.5e-4,
     },
     "fmnist": {
-        "Z_init": dict(perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2),
+        "Z_init": dict(
+            perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2
+        ),
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
@@ -143,7 +153,9 @@ params_config = {
         "alpha2": 7.5e-4,  # 1e-2
     },
     "cifar10": {
-        "Z_init": dict(perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2),
+        "Z_init": dict(
+            perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2
+        ),
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
@@ -159,6 +171,41 @@ params_config = {
         "alpha2": 5e-3,
     },
 }
+
+
+def plot_demo():
+    from plot import plot_samples
+    from plot import demo_l2_distance
+    from plot import image_grid
+    from plot import plot_rnx_gnn
+
+    ### plot sample images for each class
+    # plot_samples(X_train, y_train, class_id=0, out_name=f"{plot_dir}/airplanes.png")
+    # plot_samples(X_train, y_train, class_id=2, out_name=f"{plot_dir}/birds.png")
+
+    ### Find an example triplet
+    # idx = [7, 20, 216, 265, 534, 311, 780, 964, 889]
+    # img1 = X_train[196].reshape(1, -1)
+    # imgx = X_train[idx].reshape(len(idx), -1)
+    # dist = np.linalg.norm((img1 - imgx) / 255.0, axis=1) ** 2
+    # for i, d in zip(idx, dist):
+    #     print(i, f"{d:.3f}")
+
+    ### plot selected image and show L2-distance
+    # img_idx = [196, 534, 9230]
+    # print(y_train[img_idx])
+    # demo_l2_distance(*X_train[img_idx], plot_dir)
+
+    ### plot grid of images in the viz
+    # n_img = 25
+    # Z0_name = f"{Z_dir}/Z0.z"
+    # Z0 = joblib.load(Z0_name)
+
+    # idx = np.random.choice(len(X_train), replace=False, size=(n_img * n_img))
+    # image_grid(
+    #     imgs=X_train[idx], Z=Z0[idx], n_img=n_img, out_name=f"{plot_dir}/gridZ0.png"
+    # )
+    plot_rnx_gnn(score_dir=score_dir, out_name=f"{plot_dir}/rnx_gnn.png")
 
 
 if __name__ == "__main__":
@@ -186,7 +233,8 @@ if __name__ == "__main__":
 
     base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][0]
     plot_dir, Z_dir, score_dir = [
-        f"{base_dir}/{dir_name}/{args.dataset_name}" for dir_name in ["plots", "Z", "scores"]
+        f"{base_dir}/{dir_name}/{args.dataset_name}"
+        for dir_name in ["plots", "Z", "scores"]
     ]
     for d in [plot_dir, Z_dir, score_dir]:
         if not os.path.exists(d):
@@ -198,4 +246,5 @@ if __name__ == "__main__":
         args.dataset_name, args.n_train, args.n_test, pca=args.pca, debug=True
     )
 
-    main(args)
+    # main(args)
+    plot_demo()  # note to disable pca when making the grid plot
