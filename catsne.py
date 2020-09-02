@@ -114,7 +114,7 @@ def fill_diago(M, v):
 def compute_gradn(grad):
     """
     Compute the norm of a gradient.
-    In: 
+    In:
     - grad: numpy array of float storing a gradient.
     Out:
     Infinite norm of the gradient.
@@ -126,7 +126,7 @@ def compute_gradn(grad):
 def compute_rel_obj_diff(prev_obj, obj, n_eps):
     """
     Compute the relative objective function difference between two steps in a gradient descent.
-    In: 
+    In:
     - prev_obj: objective function value at previous iteration.
     - obj: current objective function value.
     - n_eps: a small float that should be equal to np.finfo(dtype=np.float64).eps.
@@ -151,7 +151,7 @@ def compute_rel_obj_diff(prev_obj, obj, n_eps):
 def sne_sim(dsi, vi, i, compute_log=True):
     """
     Compute the SNE asymmetric similarities, as well as their log.
-    N refers to the number of data points. 
+    N refers to the number of data points.
     In:
     - dsi: numpy 1-D array of floats with N squared distances with respect to data point i. Element k is the squared distance between data points k and i.
     - vi: bandwidth of the exponentials in the similarities with respect to i.
@@ -182,7 +182,7 @@ def sne_sim(dsi, vi, i, compute_log=True):
 def sne_bsf(dsi, vi, i, log_perp):
     """
     Function on which a binary search is performed to find the HD bandwidth of the i^th data point in SNE.
-    In: 
+    In:
     - dsi, vi, i: same as in sne_sim function.
     - log_perp: logarithm of the targeted perplexity.
     Out:
@@ -195,12 +195,12 @@ def sne_bsf(dsi, vi, i, log_perp):
 @numba.jit(nopython=True)
 def sne_bs(dsi, i, log_perp, x0=1.0):
     """
-    Binary search to find the root of sne_bsf over vi. 
+    Binary search to find the root of sne_bsf over vi.
     In:
     - dsi, i, log_perp: same as in sne_bsf function.
     - x0: starting point for the binary search. Must be strictly positive.
     Out:
-    A strictly positive float vi such that sne_bsf(dsi, vi, i, log_perp) is close to zero. 
+    A strictly positive float vi such that sne_bsf(dsi, vi, i, log_perp) is close to zero.
     """
     fx0 = sne_bsf(dsi=dsi, vi=x0, i=i, log_perp=log_perp)
     if close_to_zero(v=fx0):
@@ -256,7 +256,7 @@ def catsne_hd_sim(ds_hd, labels, theta, n_eps):
     Out:
     A tuple with:
     - A 2-D numpy array of floats with shape (N, N) and in which element [i,j] is the symmetrized HD similarity between data points i and j, as defined in [1].
-    - A 1-D numpy array of floats with N elements. Element i indicates the probability mass associated to data points with the same class as i in the HD Gaussian neighborhood around i. 
+    - A 1-D numpy array of floats with N elements. Element i indicates the probability mass associated to data points with the same class as i in the HD Gaussian neighborhood around i.
     """
     # Number of data points
     N = ds_hd.shape[0]
@@ -294,11 +294,11 @@ def catsne_ld_sim(ds_ld, n_eps):
     Compute the LD similarities of cat-SNE, as well as their log, as defined in [1].
     In:
     - ds_ld: 2-D numpy array of floats with shape (N, N), where N is the number of data points. Element [i,j] must be the squared LD distance between data points i and j.
-    - n_eps: same as in catsne_g function. 
+    - n_eps: same as in catsne_g function.
     Out:
     A tuple with three elements:
     - A 2-D numpy array of floats with shape (N, N) and in which element [i,j] is the LD similarity between data points i and j.
-    - A 2-D numpy array of floats with shape (N, N) and in which element [i,j] is the log of the LD similarity between data points i and j. By convention, the log of 0 is set to 0. 
+    - A 2-D numpy array of floats with shape (N, N) and in which element [i,j] is the log of the LD similarity between data points i and j. By convention, the log of 0 is set to 0.
     - 1.0/(1.0+ds_ld)
     """
     ds_ldp = 1.0 + ds_ld
@@ -321,7 +321,7 @@ def catsne_obj(sigma_ijt, log_s_ijt):
     - sigma_ijt: 2-D numpy array of floats, in which element [i,j] contains the HD similarity between data points i and j, as defined in [1].
     - log_s_ijt: 2-D numpy array of floats, in which element [i,j] contains the log of the LD similarity between data points i and j, as defined in [1].
     Out:
-    The value of the cat-SNE objective function. 
+    The value of the cat-SNE objective function.
     """
     return -(sigma_ijt.ravel()).dot(log_s_ijt.ravel())
 
@@ -335,7 +335,7 @@ def catsne_g(X_lds, sigma_ijt, nit, eei, eef, n_eps):
     - nit: number of gradient descent steps which have already been performed.
     - eei: number of gradient steps to perform with early exageration.
     - eef: early exageration factor.
-    - n_eps: a small float to avoid making divisions with a denominator close to 0. 
+    - n_eps: a small float to avoid making divisions with a denominator close to 0.
     Out:
     A tuple with two elements:
     - grad: a 2-D numpy array of floats with the same shape as X_lds, containing the gradient at X_lds.
@@ -429,17 +429,17 @@ def catsne_mgd(
     mom_fin,
 ):
     """
-    Performing momentum gradient descent in cat-SNE. 
-    In: 
+    Performing momentum gradient descent in cat-SNE.
+    In:
     - ds_hd: 2-D numpy array of floats with shape (N, N), where N is the number of data points. Element [i,j] must be the squared HD distance between data points i and j.
-    - labels, theta, eei, eef, ftol, dim_lds, mom_t, nit_max, gtol, mom_init, mom_fin: as in catsne function. 
-    - n_eps: a small float to avoid making divisions with a denominator close to 0. 
+    - labels, theta, eei, eef, ftol, dim_lds, mom_t, nit_max, gtol, mom_init, mom_fin: as in catsne function.
+    - n_eps: a small float to avoid making divisions with a denominator close to 0.
     - X_lds: 2-D numpy array of floats with N rows. It contains one example per row and one feature per column. It stores the initial LD coordinates.
-    - N: number of data points. 
+    - N: number of data points.
     Out:
     A tuple with:
-    - a 2-D numpy array of floats with shape (N, dim_lds), containing the LD representations of the data points in its rows. 
-    - a 1-D numpy array of floats with N elements. Element at index i indicates the probability mass around X_hds[i,:] which lies on neighbors of the same class. 
+    - a 2-D numpy array of floats with shape (N, dim_lds), containing the LD representations of the data points in its rows.
+    - a 1-D numpy array of floats with N elements. Element at index i indicates the probability mass around X_hds[i,:] which lies on neighbors of the same class.
     """
     # Computing the HD similarities.
     sigma_ijt, max_ti = catsne_hd_sim(
@@ -538,32 +538,32 @@ def catsne(
 ):
     """
     Apply cat-SNE to reduce the dimensionality of a data set by accounting for class labels.
-    Euclidean distance is employed in the LDS, as in t-SNE. 
+    Euclidean distance is employed in the LDS, as in t-SNE.
     In:
-    - X_hds: 2-D numpy array of floats with shape (N, M), containing the HD data set, with one row per example and one column per dimension. N is hence the number of data points and M the dimension of the HDS. It is assumed that the rows of X_hds are all distinct. If hd_metric is set to 'precomputed', then X_hds must be a 2-D numpy array of floats with shape (N,N) containing the pairwise distances between the data points. This matrix is assumed to be symmetric. 
-    - labels: 1-D numpy array with N elements, containing integers indicating the class labels of the data points. 
+    - X_hds: 2-D numpy array of floats with shape (N, M), containing the HD data set, with one row per example and one column per dimension. N is hence the number of data points and M the dimension of the HDS. It is assumed that the rows of X_hds are all distinct. If hd_metric is set to 'precomputed', then X_hds must be a 2-D numpy array of floats with shape (N,N) containing the pairwise distances between the data points. This matrix is assumed to be symmetric.
+    - labels: 1-D numpy array with N elements, containing integers indicating the class labels of the data points.
     - theta: treshold on the probability mass, around each HD datum, which lies on neighbors with the same class, to fit the precisions of the HD Gaussian neighborhoods. See [1] for further details. This parameter must range in [0.5,1[.
-    - init: specify the initialization of the LDS. It is either equal to 'ran', in which case the LD coordinates of the data points are initialized randomly using a Gaussian distribution centered around the origin and with a small variance, or to 'pca', in which case the LD coordinates of the data points are initialized using the PCA projection of the HD samples, or to a 2-D numpy array with N rows, in which case the initial LD coordinates of the data points are specified in the rows of init. In case hd_metric is set to 'precomputed', init can not be set to 'pca'. 
-    - dim_lds: dimension of the LDS. Must be an integer strictly greater than 0. In case init is a 2-D array, dim_lds must be equal to init.shape[1]. 
+    - init: specify the initialization of the LDS. It is either equal to 'ran', in which case the LD coordinates of the data points are initialized randomly using a Gaussian distribution centered around the origin and with a small variance, or to 'pca', in which case the LD coordinates of the data points are initialized using the PCA projection of the HD samples, or to a 2-D numpy array with N rows, in which case the initial LD coordinates of the data points are specified in the rows of init. In case hd_metric is set to 'precomputed', init can not be set to 'pca'.
+    - dim_lds: dimension of the LDS. Must be an integer strictly greater than 0. In case init is a 2-D array, dim_lds must be equal to init.shape[1].
     - nit_max: integer strictly greater than 0 wich specifies the maximum number of gradient descent iterations.
-    - rand_state: instance of numpy.random.RandomState. If None, set to numpy.random. 
+    - rand_state: instance of numpy.random.RandomState. If None, set to numpy.random.
     - hd_metric: metric to compute the HD distances. It must be one of the following:
     --- a string. In this case, it must be one of the following:
-    ------ a valid value for the 'metric' parameter of the scipy.spatial.distance.pdist function. 
+    ------ a valid value for the 'metric' parameter of the scipy.spatial.distance.pdist function.
     ------ 'precomputed', in which case X_hds must be a 2-D numpy array of floats with shape (N,N) containing the symmetric pairwise distances between the data points. init must, in this case, be different from 'pca'.
-    --- a callable. In this case, it must take two rows of X_hds as parameters and return the distance between the corresponding data points. The distance function is assumed to be symmetric. 
-    - D_hd_metric: optional dictionary to specify additional arguments to scipy.spatial.distance.pdist, depending on the employed metric. 
+    --- a callable. In this case, it must take two rows of X_hds as parameters and return the distance between the corresponding data points. The distance function is assumed to be symmetric.
+    - D_hd_metric: optional dictionary to specify additional arguments to scipy.spatial.distance.pdist, depending on the employed metric.
     - gtol: tolerance on the infinite norm of the gradient during the gradient descent.
-    - ftol: tolerance on the relative updates of the objective function during the gradient descent. 
-    - eef: early exageration factor. 
+    - ftol: tolerance on the relative updates of the objective function during the gradient descent.
+    - eef: early exageration factor.
     - eei: number of gradient descent steps to perform with early exageration.
-    - mom_init: initial momentum factor value in the gradient descent. 
-    - mom_fin: final momentum factor value in the gradient descent. 
-    - mom_t: iteration at which the momentum factor value changes during the gradient descent. 
+    - mom_init: initial momentum factor value in the gradient descent.
+    - mom_fin: final momentum factor value in the gradient descent.
+    - mom_t: iteration at which the momentum factor value changes during the gradient descent.
     Out:
     A tuple with:
-    - a 2-D numpy array of floats with shape (N, dim_lds), containing the LD representations of the data points in its rows. 
-    - a 1-D numpy array of floats with N elements. Element at index i indicates the probability mass around X_hds[i,:] which lies on neighbors of the same class. 
+    - a 2-D numpy array of floats with shape (N, dim_lds), containing the LD representations of the data points in its rows.
+    - a 1-D numpy array of floats with N elements. Element at index i indicates the probability mass around X_hds[i,:] which lies on neighbors of the same class.
     """
     # Number of data points
     N = X_hds.shape[0]
@@ -673,7 +673,7 @@ def catsne(
 
 def coranking(d_hd, d_ld):
     """
-    Computation of the co-ranking matrix, as described in [3]. 
+    Computation of the co-ranking matrix, as described in [3].
     The time complexity of this function is O(N**2 log(N)), where N is the number of data points.
     In:
     - d_hd: 2-D numpy array representing the redundant matrix of pairwise distances in the HDS.
@@ -706,7 +706,7 @@ def eval_auc(arr):
     In:
     - arr: 1-D numpy array storing the values of a curve from K=1 to arr.size.
     Out:
-    The AUC under arr, as defined in [5], with a log scale for K=1 to arr.size. 
+    The AUC under arr, as defined in [5], with a log scale for K=1 to arr.size.
     """
     i_all_k = 1.0 / (np.arange(arr.size) + 1.0)
     return np.float64(arr.dot(i_all_k)) / (i_all_k.sum())
@@ -718,7 +718,7 @@ def eval_rnx(Q):
     Evaluate R_NX(K) for K = 1 to N-2, as defined in [4]. N is the number of data points in the data set.
     The time complexity of this function is O(N^2).
     In:
-    - Q: a 2-D numpy array representing the (N-1)x(N-1) co-ranking matrix of the embedding. 
+    - Q: a 2-D numpy array representing the (N-1)x(N-1) co-ranking matrix of the embedding.
     Out:
     A 1-D numpy array with N-2 elements. Element i contains R_NX(i+1).
     """
@@ -740,23 +740,23 @@ def eval_rnx(Q):
 def eval_dr_quality(d_hd, d_ld):
     """
     Compute the DR quality assessment criteria R_{NX}(K) and AUC, as defined in [2, 3, 4, 5].
-    These criteria measure the neighborhood preservation around the data points from the HDS to the LDS. 
-    Based on the HD and LD distances, the sets v_i^K (resp. n_i^K) of the K nearest neighbors of data point i in the HDS (resp. LDS) can first be computed. 
-    Their average normalized agreement develops as Q_{NX}(K) = (1/N) * \sum_{i=1}^{N} |v_i^K \cap n_i^K|/K, where N refers to the number of data points and \cap to the set intersection operator. 
+    These criteria measure the neighborhood preservation around the data points from the HDS to the LDS.
+    Based on the HD and LD distances, the sets v_i^K (resp. n_i^K) of the K nearest neighbors of data point i in the HDS (resp. LDS) can first be computed.
+    Their average normalized agreement develops as Q_{NX}(K) = (1/N) * \sum_{i=1}^{N} |v_i^K \cap n_i^K|/K, where N refers to the number of data points and \cap to the set intersection operator.
     Q_{NX}(K) ranges between 0 and 1; the closer to 1, the better.
-    As the expectation of Q_{NX}(K) with random LD coordinates is equal to K/(N-1), which is increasing with K, R_{NX}(K) = ((N-1)*Q_{NX}(K)-K)/(N-1-K) enables more easily comparing different neighborhood sizes K. 
-    R_{NX}(K) ranges between -1 and 1, but a negative value indicates that the embedding performs worse than random. Therefore, R_{NX}(K) typically lies between 0 and 1. 
-    The R_{NX}(K) values for K=1 to N-2 can be displayed as a curve with a log scale for K, as closer neighbors typically prevail. 
+    As the expectation of Q_{NX}(K) with random LD coordinates is equal to K/(N-1), which is increasing with K, R_{NX}(K) = ((N-1)*Q_{NX}(K)-K)/(N-1-K) enables more easily comparing different neighborhood sizes K.
+    R_{NX}(K) ranges between -1 and 1, but a negative value indicates that the embedding performs worse than random. Therefore, R_{NX}(K) typically lies between 0 and 1.
+    The R_{NX}(K) values for K=1 to N-2 can be displayed as a curve with a log scale for K, as closer neighbors typically prevail.
     The area under the resulting curve (AUC) is a scalar score which grows with DR quality, quantified at all scales with an emphasis on small ones.
-    The AUC lies between -1 and 1, but a negative value implies performances which are worse than random. 
-    In: 
+    The AUC lies between -1 and 1, but a negative value implies performances which are worse than random.
+    In:
     - d_hd: 2-D numpy array of floats with shape (N, N), representing the redundant matrix of pairwise distances in the HDS.
     - d_ld: 2-D numpy array of floats with shape (N, N), representing the redundant matrix of pairwise distances in the LDS.
     Out: a tuple with
     - a 1-D numpy array with N-2 elements. Element i contains R_{NX}(i+1).
     - the AUC of the R_{NX}(K) curve with a log scale for K, as defined in [5].
     Remark:
-    - The time complexity to evaluate the quality criteria is O(N**2 log(N)). It is the time complexity to compute the co-ranking matrix. R_{NX}(K) can then be evaluated for all K=1, ..., N-2 in O(N**2). 
+    - The time complexity to evaluate the quality criteria is O(N**2 log(N)). It is the time complexity to compute the co-ranking matrix. R_{NX}(K) can then be evaluated for all K=1, ..., N-2 in O(N**2).
     """
     # Computing the co-ranking matrix of the embedding, and the R_{NX}(K) curve.
     rnxk = eval_rnx(Q=coranking(d_hd=d_hd, d_ld=d_ld))
@@ -776,19 +776,19 @@ def eval_dr_quality(d_hd, d_ld):
 @numba.jit(nopython=True)
 def knngain(d_hd, d_ld, labels):
     """
-    Compute the KNN gain curve and its AUC, as defined in [1]. 
+    Compute the KNN gain curve and its AUC, as defined in [1].
     If c_i refers to the class label of data point i, v_i^K (resp. n_i^K) to the set of the K nearest neighbors of data point i in the HDS (resp. LDS), and N to the number of data points, the KNN gain develops as G_{NN}(K) = (1/N) * \sum_{i=1}^{N} (|{j \in n_i^K such that c_i=c_j}|-|{j \in v_i^K such that c_i=c_j}|)/K.
-    It averages the gain (or loss, if negative) of neighbors of the same class around each point, after DR. 
+    It averages the gain (or loss, if negative) of neighbors of the same class around each point, after DR.
     Hence, a positive value correlates with likely improved KNN classification performances.
-    As the R_{NX}(K) curve from the unsupervised DR quality assessment, the KNN gain G_{NN}(K) can be displayed with respect to K, with a log scale for K. 
-    A global score summarizing the resulting curve is provided by its area (AUC). 
-    In: 
+    As the R_{NX}(K) curve from the unsupervised DR quality assessment, the KNN gain G_{NN}(K) can be displayed with respect to K, with a log scale for K.
+    A global score summarizing the resulting curve is provided by its area (AUC).
+    In:
     - d_hd: 2-D numpy array of floats with shape (N, N), representing the redundant matrix of pairwise distances in the HDS.
     - d_ld: 2-D numpy array of floats with shape (N, N), representing the redundant matrix of pairwise distances in the LDS.
-    - labels: 1-D numpy array with N elements, containing integers indicating the class labels of the data points. 
-    Out: 
+    - labels: 1-D numpy array with N elements, containing integers indicating the class labels of the data points.
+    Out:
     A tuple with:
-    - a 1-D numpy array of floats with N-1 elements, storing the KNN gain for K=1 to N-1. 
+    - a 1-D numpy array of floats with N-1 elements, storing the KNN gain for K=1 to N-1.
     - the AUC of the KNN gain curve, with a log scale for K.
     """
     # Number of data points
@@ -844,7 +844,7 @@ def viz_digits(
     - stit: fontsize of the title of the figure.
     - slab: fontsize of the digits.
     - wlab: weight to plot the digits.
-    - max_ti: 2nd element in the tuple returned by catsne. It changes the size of the data points proportionally to the probability mass of their neighbors with the same class in the HDS. If None, it is set to np.ones(shape=N, dtype=np.int64), meaning that all data points have equal size. 
+    - max_ti: 2nd element in the tuple returned by catsne. It changes the size of the data points proportionally to the probability mass of their neighbors with the same class in the HDS. If None, it is set to np.ones(shape=N, dtype=np.int64), meaning that all data points have equal size.
     Out:
     A figure is shown.
     """
@@ -945,24 +945,24 @@ def viz_qa(
     xlog=True,
 ):
     """
-    Plot the DR quality criteria curves. 
-    In: 
-    - Ly: list of 1-D numpy arrays. The i^th array gathers the y-axis values of a curve from x=1 to x=Ly[i].size, with steps of 1. 
+    Plot the DR quality criteria curves.
+    In:
+    - Ly: list of 1-D numpy arrays. The i^th array gathers the y-axis values of a curve from x=1 to x=Ly[i].size, with steps of 1.
     - ymin, ymax: minimum and maximum values of the y-axis. If None, ymin (resp. ymax) is set to the smallest (resp. greatest) value among [y.min() for y in Ly] (resp. [y.max() for y in Ly]).
     - Lmarkers: list with the markers for each curve. If None, some pre-defined markers are used.
     - Lcols: list with the colors of the curves. If None, some pre-defined colors are used.
     - Lleg: list of strings, containing the legend entries for each curve. If None, no legend is shown.
-    - Lls: list of the linestyles ('solid', 'dashed', ...) of the curves. If None, 'solid' style is employed for all curves. 
-    - Lmedw: list with the markeredgewidths of the curves. If None, some pre-defined value is employed. 
+    - Lls: list of the linestyles ('solid', 'dashed', ...) of the curves. If None, 'solid' style is employed for all curves.
+    - Lmedw: list with the markeredgewidths of the curves. If None, some pre-defined value is employed.
     - Lsdots: list with the sizes of the markers. If None, some pre-defined value is employed.
-    - lw: linewidth for all the curves. 
+    - lw: linewidth for all the curves.
     - markevery: approximately 1/markevery markers are displayed for each curve. Set to None to mark every dot.
     - tit: title of the plot.
     - xlabel, ylabel: labels for the x- and y-axes.
     - alpha_plot: alpha for the curves.
     - alpha_leg: alpha for the legend.
     - stit: fontsize for the title.
-    - sax: fontsize for the labels of the axes. 
+    - sax: fontsize for the labels of the axes.
     - sleg: fontsize for the legend.
     - zleg: zorder for the legend. Set to 1 to plot the legend behind the data, and to None to keep the default value.
     - loc_leg: location of the legend ('best', 'upper left', ...).
@@ -977,9 +977,9 @@ def viz_qa(
     - grid_ls: linestyle of the grid.
     - grid_col: color of the grid.
     - grid_alpha: alpha of the grid.
-    - xlog: True to produce a semilogx plot and False to produce a plot. 
+    - xlog: True to produce a semilogx plot and False to produce a plot.
     Out:
-    A figure is shown. 
+    A figure is shown.
     """
     # Number of curves
     nc = len(Ly)

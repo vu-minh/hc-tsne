@@ -13,13 +13,14 @@ from plot import scatter, plot_loss
 from score import evaluate_scores
 
 
-def run_tsne(config, score_logger, rerun=True):
-    Z0_name, Z0_test_name = f"{Z_dir}/Z0.z", f"{Z_dir}/Z0_test.z"
+def run_tsne(config, score_logger, seed=2020, rerun=True):
+    Z0_name = f"{Z_dir}/Z0_{seed}.z"
+    Z0_test_name = f"{Z_dir}/Z0_test_{seed}.z"
 
     if rerun or not os.path.exists(Z0_name):
         print("\n[DEBUG]Run original TSNE with ", config)
 
-        Z0 = tsne(X_train, **config)
+        Z0 = tsne(X_train, random_state=seed, **config)
         Z0_test = Z0.transform(X_test)
         joblib.dump(np.array(Z0), Z0_name)
         joblib.dump(np.array(Z0_test), Z0_test_name)
@@ -27,7 +28,9 @@ def run_tsne(config, score_logger, rerun=True):
         Z0 = joblib.load(Z0_name)
         Z0_test = joblib.load(Z0_test_name)
 
-    scatter(Z0, None, y_train, None, out_name=f"{plot_dir}/Z0.png", show_group=None)
+    scatter(
+        Z0, None, y_train, None, out_name=f"{plot_dir}/Z0_{seed}.png", show_group=None
+    )
 
     if score_logger is not None:
         evaluate_scores(
@@ -37,8 +40,11 @@ def run_tsne(config, score_logger, rerun=True):
     return Z0, Z0_test  # Z0 is used an initialization in hc_tsne
 
 
-def run_hc_tsne(Z_init, tree, alpha, margin, config, score_logger, rerun=False):
-    Z1_name, Z1_test_name = f"{Z_dir}/Z1.z", f"{Z_dir}/Z1_test.z"
+def run_hc_tsne(
+    Z_init, tree, alpha, margin, config, score_logger, seed=2020, rerun=False
+):
+    Z1_name = f"{Z_dir}/Z1_{seed}.z"
+    Z1_test_name = f"{Z_dir}/Z1_test_{seed}.z"
     loss_name = f"{score_dir}/loss-{name_suffix}.json"
     loss_logger = LossLogger(loss_name)
 
@@ -52,6 +58,7 @@ def run_hc_tsne(Z_init, tree, alpha, margin, config, score_logger, rerun=False):
             alpha=alpha,
             margin=margin,
             loss_logger=loss_logger,
+            random_state=seed,
             **config["hc"],
             **config["Z_new"],
         )
@@ -85,7 +92,10 @@ def main(args):
 
     # run original tsne
     Z0, _ = run_tsne(
-        config=config["Z_init"], score_logger=score_logger, rerun=args.rerun0
+        config=config["Z_init"],
+        score_logger=score_logger,
+        seed=args.seed,
+        rerun=args.rerun0,
     )
 
     # build hierarchical constraint in tree form
@@ -106,6 +116,7 @@ def main(args):
         margin=args.margin,
         config=config,
         score_logger=score_logger,
+        seed=args.seed,
         rerun=args.rerun1,
     )
 
@@ -118,12 +129,15 @@ def main(args):
 params_config = {
     "mnist": {
         "Z_init": dict(
-            perplexity=50, n_iter=500, random_state=2020, n_jobs=-1, verbose=2
+            perplexity=50,
+            n_iter=500,
+            n_jobs=-1,
+            verbose=2,  # random_state=2020,
         ),
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
-            random_state=2020,
+            # random_state=2020,
             n_jobs=-1,
             verbose=2,
             callbacks_every_iters=10,
@@ -136,12 +150,15 @@ params_config = {
     },
     "fmnist": {
         "Z_init": dict(
-            perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2
+            perplexity=50,
+            n_iter=500,
+            n_jobs=-2,
+            verbose=2,  #  random_state=2020,
         ),
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
-            random_state=2020,
+            # random_state=2020,
             n_jobs=-2,
             verbose=2,
             callbacks_every_iters=10,
@@ -154,12 +171,15 @@ params_config = {
     },
     "cifar10": {
         "Z_init": dict(
-            perplexity=50, n_iter=500, random_state=2020, n_jobs=-2, verbose=2
+            perplexity=50,
+            n_iter=500,
+            n_jobs=-2,
+            verbose=2,  #  random_state=2020,
         ),
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
-            random_state=2020,
+            # random_state=2020,
             n_jobs=-2,
             verbose=2,
             callbacks_every_iters=10,
@@ -217,6 +237,7 @@ if __name__ == "__main__":
     argm("--rerun0", action="store_true", help="Rerun original tsne")
     argm("--rerun1", action="store_true", help="Rerun new hc-tsne")
     argm("--no-score", action="store_true", help="Do not calculate metric scores")
+    argm("--seed", "-s", default=2020, type=int, help="Random seed")
 
     argm("--dataset_name", "-d")
     argm("--pca", default=0.95, type=float, help="Run PCA on raw data")
@@ -231,7 +252,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-    base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][0]
+    base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][1]
     plot_dir, Z_dir, score_dir = [
         f"{base_dir}/{dir_name}/{args.dataset_name}"
         for dir_name in ["plots", "Z", "scores"]
@@ -240,11 +261,11 @@ if __name__ == "__main__":
         if not os.path.exists(d):
             os.mkdir(d)
 
-    name_suffix = f"d{args.depth}-m{args.margin}"
+    name_suffix = f"d{args.depth}-m{args.margin}-{args.seed}"
 
     (X_train, y_train), (X_test, y_test), label_names = load_dataset(
         args.dataset_name, args.n_train, args.n_test, pca=args.pca, debug=True
     )
 
-    # main(args)
-    plot_demo()  # note to disable pca when making the grid plot
+    main(args)
+    # plot_demo()  # note to disable pca when making the grid plot

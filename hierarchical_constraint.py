@@ -145,7 +145,9 @@ def _generate_constraints_cifar10(labels, label_names, depth=0, label_percent=1.
         )
 
         group_pets = H._create_intermediate_node("pets", ["dog", "cat"])
-        group_hoofed_mammals = H._create_intermediate_node("hoofed-mammals", ["deer", "horse"])
+        group_hoofed_mammals = H._create_intermediate_node(
+            "hoofed-mammals", ["deer", "horse"]
+        )
         group_nature = H._create_intermediate_node(
             "nature", ["bird", "frog", group_pets.name, group_hoofed_mammals.name]
         )

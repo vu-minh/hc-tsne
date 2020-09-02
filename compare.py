@@ -18,7 +18,7 @@ def run(args, flat_tree):
 
     scatter(
         Z,
-        None, # Z_test
+        None,  # Z_test
         y_train,
         y_test,
         tree=flat_tree,
