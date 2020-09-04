@@ -2,6 +2,7 @@
 
 import os
 import joblib
+import numpy as np
 from sklearn.neighbors import NeighborhoodComponentsAnalysis
 from umap import UMAP
 
