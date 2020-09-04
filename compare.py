@@ -50,7 +50,7 @@ def run_nca(args):
 
 
 def run_umap(args):
-    mapper = UMAP(n_neighbors=args.n_neighbors, random_state=args.seed, init='random')
+    mapper = UMAP(n_neighbors=args.n_neighbors, random_state=args.seed, init="random")
     mapper.fit(X_train, y=y_train)
     Z = mapper.embedding_
     Z_test = mapper.transform(X_test)
