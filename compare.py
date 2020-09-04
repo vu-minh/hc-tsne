@@ -13,6 +13,7 @@ from catsne import catsne
 
 
 def run(args, flat_tree):
+    name_suffix = f"{args.method}-{args.seed}"
     run_func = {"nca": run_nca, "umap": run_umap, "catsne": run_catsne}[args.method]
     Z, Z_test = run_func(args)
 
@@ -22,11 +23,11 @@ def run(args, flat_tree):
         y_train,
         y_test,
         tree=flat_tree,
-        out_name=f"{plot_dir}/{args.method}.png",
+        out_name=f"{plot_dir}/{name_suffix}.png",
         show_group="text",
     )
 
-    score_name = f"{score_dir}/score-{args.method}.json"
+    score_name = f"{score_dir}/score-{name_suffix}.json"
     score_logger = None if args.no_score else ScoreLogger(score_name)
     evaluate_scores(
         X_train, y_train, X_test, y_test, Z, Z_test, args.method, score_logger
@@ -49,7 +50,7 @@ def run_nca(args):
 
 
 def run_umap(args):
-    mapper = UMAP(n_neighbors=args.n_neighbors, verbose=1)
+    mapper = UMAP(n_neighbors=args.n_neighbors, random_state=args.seed, init='random')
     mapper.fit(X_train, y=y_train)
     Z = mapper.embedding_
     Z_test = mapper.transform(X_test)
@@ -57,7 +58,8 @@ def run_umap(args):
 
 
 def run_catsne(args):
-    Z, _ = catsne(X_train, y_train)
+    random_state = np.random.RandomState(args.seed)
+    Z, _ = catsne(X_train, y_train, rand_state=random_state, init="ran")
     return Z, None
 
 
@@ -70,6 +72,7 @@ if __name__ == "__main__":
     argm("--dataset_name", "-d")
     argm("--no-score", action="store_true", help="Do not calculate metric scores")
     argm("--method", "-m", default="nca", help="Run different methods like umap, nca")
+    argm("--seed", "-s", default=2020, help="Random seed")
 
     argm("--pca", default=0.95, type=float, help="Run PCA on raw data")
     argm("--n_train", default=10000, type=int, help="# datapoints for training set")
