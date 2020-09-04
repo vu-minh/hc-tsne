@@ -1,6 +1,7 @@
 # Run Neighborhood Components Analysis
 
 import os
+import joblib
 from sklearn.neighbors import NeighborhoodComponentsAnalysis
 from umap import UMAP
 
@@ -16,6 +17,8 @@ def run(args, flat_tree):
     name_suffix = f"{args.method}-{args.seed}"
     run_func = {"nca": run_nca, "umap": run_umap, "catsne": run_catsne}[args.method]
     Z, Z_test = run_func(args)
+    joblib.dump(Z, f"{Z_dir}/Z-{args.method}.z")
+    joblib.dump(Z_test, f"{Z_dir}/Z_test-{args.method}.z")
 
     scatter(
         Z,
@@ -72,7 +75,7 @@ if __name__ == "__main__":
     argm("--dataset_name", "-d")
     argm("--no-score", action="store_true", help="Do not calculate metric scores")
     argm("--method", "-m", default="nca", help="Run different methods like umap, nca")
-    argm("--seed", "-s", default=2020, help="Random seed")
+    argm("--seed", "-s", default=2020, type=int, help="Random seed")
 
     argm("--pca", default=0.95, type=float, help="Run PCA on raw data")
     argm("--n_train", default=10000, type=int, help="# datapoints for training set")

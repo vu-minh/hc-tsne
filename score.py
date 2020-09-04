@@ -38,13 +38,13 @@ def knngain_and_rnx(X, labels, Z, method, logger):
     # calculate KNN gain
     gain, auc_knn = knngain(d_hd, d_ld, labels)
     logger.log("auc_knn", auc_knn, method)
-    logger.log("knn_gain", gain.astype(np.float32).tolist(), method)
+    # logger.log("knn_gain", gain.astype(np.float32).tolist(), method)
     print(method, f"AUC[KNN]: {auc_knn:.3f}")
 
     # calculate RNX
     rnx, auc_rnx = eval_dr_quality(d_hd, d_ld)
     logger.log("auc_rnx", auc_rnx, method)
-    logger.log("rnx", rnx.astype(np.float32).tolist(), method)
+    # logger.log("rnx", rnx.astype(np.float32).tolist(), method)
     print(method, f"AUC[RNX]: {auc_rnx:.3f}")
 
     del d_hd, d_ld
