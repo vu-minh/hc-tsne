@@ -8,7 +8,7 @@ def plot_loss(losses: Dict, out_name: str = "loss.png"):
     if len(losses.keys()) == 0:
         return
 
-    fig, ax = plt.subplots(1, 1, figsize=(4.5, 1.8))
+    fig, ax = plt.subplots(1, 1, figsize=(4.9, 2.1))
     ax.set_xlabel("Iterations")
     color1, color2 = ["tab:blue", "tab:red"]
     n_iters = len(losses["htriplet_loss"])
@@ -19,28 +19,28 @@ def plot_loss(losses: Dict, out_name: str = "loss.png"):
             losses["htriplet_loss"],
             marker=".",
             c=color1,
-            label="Regularization Triplet loss",
+            label="Regularization $\mathcal{L}_{intra}+\mathcal{L}_{inter}$",
             markevery=[i * 10 for i in range(n_iters // 10 + 1)],
         )
         ax.tick_params(axis="y", labelcolor=color1)
 
     # plot new kl_loss
-    kl_loss = losses["new_loss"]
+    kl_loss = losses["new_loss"][1:]
     print("[DEBUG] new loss: ", len(kl_loss))
     if len(kl_loss) > 0:
         ax2 = ax.twinx()  # share x-axis
         ax2.set_ylim(top=1.1 * max(kl_loss), bottom=0.9 * min(kl_loss))
         ax2.plot(
             [i * 10 for i in range(n_iters // 10 + 1)],
-            kl_loss[:-1],
+            kl_loss,
             marker="^",
             c=color2,
-            label="New HCt-SNE loss",
+            label="New HCt-SNE loss\n$KL_{loss} + \\alpha (\mathcal{L}_{intra}+\mathcal{L}_{inter})$",
             # markevery=[i * 10 for i in range(n_iters // 10 + 1)],
         )
         ax2.tick_params(axis="y", labelcolor=color2)
 
-    fig.legend(loc="upper right", bbox_to_anchor=(0.88, 1.08))
+    fig.legend(loc="upper right", bbox_to_anchor=(0.87, 1.04))
     fig.savefig(out_name, bbox_inches="tight")
 
 
