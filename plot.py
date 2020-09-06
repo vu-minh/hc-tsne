@@ -181,6 +181,34 @@ def image_grid(imgs, Z, img_size=32, n_img=20, out_name="grid.png"):
 
     im = image.array_to_img(out)
     im.save(out_name, quality=100)
+    
+    
+def image_grid2(images, Z, ny=25, nx=40, out_name="grid2.png"):
+	import rasterfairy
+	from PIL import Image
+
+	# assign to grid
+	grid_assignment = rasterfairy.transformPointCloud2D(Z, target=(nx, ny))
+	print(grid_assignment)
+
+	tile_width = 32
+	tile_height = 32
+
+	full_width = tile_width * nx
+	full_height = tile_height * ny
+	# aspect_ratio = float(tile_width) / tile_height
+
+	grid_image = Image.new('RGB', (full_width, full_height))
+
+	for img, grid_pos in zip(images, grid_assignment[0]):
+		idx_x, idx_y = grid_pos
+		x, y = tile_width * idx_x, tile_height * idx_y
+		print(idx_x, idx_y, x, y)
+		
+		tile = Image.fromarray(img.reshape((32, 32, 3)).astype('uint8'), 'RGB')
+		grid_image.paste(tile, box=(int(x), int(y), int(x) + 32, int(y) + 32))
+
+	grid_image.save(out_name)
 
 
 def plot_rnx_gnn(score_dir, out_name="rnx_gnn.png"):
