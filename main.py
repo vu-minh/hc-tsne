@@ -129,11 +129,8 @@ def main(args):
 params_config = {
     "mnist": {
         "Z_init": dict(
-            perplexity=50,
-            n_iter=500,
-            n_jobs=-1,
-            verbose=2,  # random_state=2020,
-        ),
+            perplexity=50, n_iter=500, n_jobs=-1, verbose=2,
+        ),  # random_state=2020,
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
@@ -150,11 +147,8 @@ params_config = {
     },
     "fmnist": {
         "Z_init": dict(
-            perplexity=50,
-            n_iter=500,
-            n_jobs=-2,
-            verbose=2,  #  random_state=2020,
-        ),
+            perplexity=50, n_iter=500, n_jobs=-2, verbose=2,
+        ),  #  random_state=2020,
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
@@ -171,11 +165,8 @@ params_config = {
     },
     "cifar10": {
         "Z_init": dict(
-            perplexity=50,
-            n_iter=500,
-            n_jobs=-2,
-            verbose=2,  #  random_state=2020,
-        ),
+            perplexity=50, n_iter=500, n_jobs=-2, verbose=2,
+        ),  #  random_state=2020,
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
@@ -196,7 +187,7 @@ params_config = {
 def plot_demo():
     from plot import plot_samples
     from plot import demo_l2_distance
-    from plot import image_grid
+    from plot import image_grid2
     from plot import plot_rnx_gnn
 
     ### plot sample images for each class
@@ -216,16 +207,24 @@ def plot_demo():
     # print(y_train[img_idx])
     # demo_l2_distance(*X_train[img_idx], plot_dir)
 
-    ### plot grid of images in the viz
-    # n_img = 25
-    # Z0_name = f"{Z_dir}/Z0.z"
-    # Z0 = joblib.load(Z0_name)
+    # plot_rnx_gnn(score_dir=score_dir, out_name=f"{plot_dir}/rnx_gnn.png")
 
-    # idx = np.random.choice(len(X_train), replace=False, size=(n_img * n_img))
-    # image_grid(
-    #     imgs=X_train[idx], Z=Z0[idx], n_img=n_img, out_name=f"{plot_dir}/gridZ0.png"
-    # )
-    plot_rnx_gnn(score_dir=score_dir, out_name=f"{plot_dir}/rnx_gnn.png")
+    ### plot grid of images in the viz
+    n_rows, n_cols = 16, 32
+    Z0_name = f"{Z_dir}/Z0.z"
+    Z0 = joblib.load(Z0_name)
+
+    idx = np.random.choice(len(X_train), replace=False, size=(n_rows * n_cols))
+    X = X_train[idx]
+    Z = np.array(tsne(X, perplexity=20))
+
+    image_grid2(
+        X * 255,
+        Z,
+        ny=n_rows,
+        nx=n_cols,
+        out_name=f"{plot_dir}/pixels_embed_cifar10.jpg",
+    )
 
 
 if __name__ == "__main__":
@@ -252,7 +251,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-    base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][1]
+    base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][0]
     plot_dir, Z_dir, score_dir = [
         f"{base_dir}/{dir_name}/{args.dataset_name}"
         for dir_name in ["plots", "Z", "scores"]
@@ -267,5 +266,5 @@ if __name__ == "__main__":
         args.dataset_name, args.n_train, args.n_test, pca=args.pca, debug=True
     )
 
-    main(args)
+    # main(args)
     # plot_demo()  # note to disable pca when making the grid plot
