@@ -1,0 +1,5 @@
+anytree==2.8.0
+openTSNE==0.4.1
+scikit-learn>=0.22.0
+umap-learn>=0.3.10
+tensorflow>=2.0.0 # using keras dataset
