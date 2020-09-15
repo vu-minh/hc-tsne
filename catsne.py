@@ -1,10 +1,10 @@
-#! python3
-# -*-coding:Utf-8 -*
+# NOTE
+# This is the source code of cat-SNE method, taken from https://github.com/cdebodt/cat-SNE
+# This is not our source code.
+# The license of this code is shown below.
 
 ########################################################################################################
 ########################################################################################################
-
-#     catsne.py
 
 # This code implements cat-SNE, a class-aware version of t-SNE, as well as quality assessment criteria for both supervised and unsupervised dimensionality reduction.
 # Cat-SNE was presented at the ESANN 2019 conference.
