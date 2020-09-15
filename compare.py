@@ -31,14 +31,12 @@ def run(args, flat_tree):
         show_group="text",
     )
 
-    score_name = f"{score_dir}/score-{name_suffix}.json"
-    score_logger = None if args.no_score else ScoreLogger(score_name)
-    evaluate_scores(
-        X_train, y_train, X_test, y_test, Z, Z_test, args.method, score_logger
-    )
+    if not args.no_score:
+        score_name = f"{score_dir}/score-{name_suffix}.json"
+        score_logger = ScoreLogger(score_name)
+        evaluate_scores(X_train, y_train, X_test, y_test, Z, Z_test, args.method, score_logger)
 
-    # important: save the logger filer
-    if score_logger is not None:
+        # important: save the logger filer
         score_logger.dump()
         score_logger.print()
 
@@ -81,6 +79,7 @@ if __name__ == "__main__":
     argm("--pca", default=0.95, type=float, help="Run PCA on raw data")
     argm("--n_train", default=10000, type=int, help="# datapoints for training set")
     argm("--n_test", default=5000, type=int, help="# datasetpoints fro test set")
+    argm("-n", default=10000, type=int, help="Number datapoints")
 
     argm("--nca_init", default="auto", help="NCA initialization params: auto, pca, lda")
     argm("--n_neighbors", default=10, type=int, help="UMAP n_neighbors")
@@ -88,10 +87,9 @@ if __name__ == "__main__":
     print(args)
 
     # prepare directories for storing figures and dump embeddings.
-    base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][1]
+    base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][0]
     plot_dir, Z_dir, score_dir = [
-        f"{base_dir}/{dir_name}/{args.dataset_name}"
-        for dir_name in ["plots", "Z", "scores"]
+        f"{base_dir}/{dir_name}/{args.dataset_name}" for dir_name in ["plots", "Z", "scores"]
     ]
     for d in [plot_dir, Z_dir, score_dir]:
         if not os.path.exists(d):
