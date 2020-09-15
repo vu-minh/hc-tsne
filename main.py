@@ -233,8 +233,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     argm = parser.add_argument
 
-    argm("--rerun0", action="store_true", help="Rerun original tsne")
-    argm("--rerun1", action="store_true", help="Rerun new hc-tsne")
+    argm("--rerun0", action="store_true", help="Rerun original t-SNE")
+    argm("--rerun1", action="store_true", help="Rerun new HCt-SNE")
     argm("--no-score", action="store_true", help="Do not calculate metric scores")
     argm("--seed", "-s", default=2020, type=int, help="Random seed")
 
@@ -242,6 +242,7 @@ if __name__ == "__main__":
     argm("--pca", default=0.95, type=float, help="Run PCA on raw data")
     argm("--n_train", default=10000, type=int, help="# datapoints for training set")
     argm("--n_test", default=5000, type=int, help="# datasetpoints fro test set")
+    argm("-n", default=10000, type=int, help="Number datapoints")
 
     argm("--depth", default=2, type=int, help="Depth of tree in the hierarchy.")
     argm("--label_percent", default=1.0, type=float, help="% label used in each group.")
@@ -266,5 +267,5 @@ if __name__ == "__main__":
         args.dataset_name, args.n_train, args.n_test, pca=args.pca, debug=True
     )
 
-    # main(args)
+    main(args)
     # plot_demo()  # note to disable pca when making the grid plot
