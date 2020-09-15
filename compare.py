@@ -1,5 +1,3 @@
-# Run Neighborhood Components Analysis
-
 import os
 import joblib
 import numpy as np
@@ -34,7 +32,9 @@ def run(args, flat_tree):
     if not args.no_score:
         score_name = f"{score_dir}/score-{name_suffix}.json"
         score_logger = ScoreLogger(score_name)
-        evaluate_scores(X_train, y_train, X_test, y_test, Z, Z_test, args.method, score_logger)
+        evaluate_scores(
+            X_train, y_train, X_test, y_test, Z, Z_test, args.method, score_logger
+        )
 
         # important: save the logger filer
         score_logger.dump()
@@ -92,7 +92,8 @@ if __name__ == "__main__":
     # prepare directories for storing figures and dump embeddings.
     base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][0]
     plot_dir, Z_dir, score_dir = [
-        f"{base_dir}/{dir_name}/{args.dataset_name}" for dir_name in ["plots", "Z", "scores"]
+        f"{base_dir}/{dir_name}/{args.dataset_name}"
+        for dir_name in ["plots", "Z", "scores"]
     ]
     for d in [plot_dir, Z_dir, score_dir]:
         if not os.path.exists(d):

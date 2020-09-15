@@ -1,5 +1,3 @@
-# openTSNE with constraints
-
 from functools import partial
 
 import numpy as np

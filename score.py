@@ -1,5 +1,5 @@
-# - de Bodt, C., Mulders, D., López-Sánchez, D., Verleysen, M., & Lee, J. A. (2019). Class-aware t-SNE: cat-SNE. In ESANN (pp. 409-414).
-# https://github.com/cdebodt/cat-SNE/blob/master/catsne.py
+# The AUC[R_NX] and AUC[G_NN] implementation is used from cat-SNE (not ours).
+# See the license in https://github.com/cdebodt/cat-SNE.
 
 import numpy as np
 import numba

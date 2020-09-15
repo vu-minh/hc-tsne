@@ -5,7 +5,7 @@ import numpy as np
 from anytree import LevelOrderIter, LevelGroupOrderIter
 
 
-# TODO in dev mode: need to review
+# not used in V1
 def _triplet_loss_all(
     anchor_indices, positive_indices, negative_indices, Y, margin=0.0
 ):
@@ -62,6 +62,7 @@ def _triplet_loss_all(
     return loss, grad
 
 
+# not used in V1
 def _triplet_loss_anchor_vs_all(
     anchor_index, positive_indices, negative_indices, Y, margin=0.0
 ):
@@ -233,5 +234,4 @@ def hierarchical_triplet_loss(
     if loss > 1e9:
         raise ValueError("Regularization term too large!")
 
-    # TODO: recap gradient (there are some points that move much more than others)
     return loss, grad
