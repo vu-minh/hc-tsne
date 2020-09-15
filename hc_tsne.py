@@ -15,9 +15,7 @@ EPSILON = np.finfo(np.float64).eps
 def tsne(X, initialization="pca", **tsne_kwargs):
     """Original openTSNE"""
     tsne = TSNE(
-        initialization=initialization,
-        negative_gradient_method="bh",
-        **tsne_kwargs,
+        initialization=initialization, negative_gradient_method="bh", **tsne_kwargs,
     )
     return tsne.fit(X)
 
