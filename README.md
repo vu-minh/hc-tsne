@@ -60,7 +60,7 @@ Example: Run HCt-SNE for a subset of 10K of the CIFAR10 dataset
 
 ```bash
 # run HCt-SNE with CIFAR10 (set -n 50000 for running with full dataset)
-python main.py -d cifar10 -n 10000 --margin 0.5 --seed 2020
+python main.py -d cifar10 -n 10000 --margin 0.5 --rerun0 --rerun1 --seed 2020
 ```
 
 Run other methods (UMAP, cat-SNE) for comparison (using `compare.py` script)

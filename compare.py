@@ -84,6 +84,9 @@ if __name__ == "__main__":
     argm("--nca_init", default="auto", help="NCA initialization params: auto, pca, lda")
     argm("--n_neighbors", default=10, type=int, help="UMAP n_neighbors")
     args = parser.parse_args()
+
+    # NOTE for V1, only use `-n` option
+    args.n_train = args.n
     print(args)
 
     # prepare directories for storing figures and dump embeddings.

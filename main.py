@@ -28,21 +28,15 @@ def run_tsne(config, score_logger, seed=2020, rerun=True):
         Z0 = joblib.load(Z0_name)
         Z0_test = joblib.load(Z0_test_name)
 
-    scatter(
-        Z0, None, y_train, None, out_name=f"{plot_dir}/Z0_{seed}.png", show_group=None
-    )
+    scatter(Z0, None, y_train, None, out_name=f"{plot_dir}/Z0_{seed}.png", show_group=None)
 
     if score_logger is not None:
-        evaluate_scores(
-            X_train, y_train, X_test, y_test, Z0, Z0_test, "tsne", score_logger
-        )
+        evaluate_scores(X_train, y_train, X_test, y_test, Z0, Z0_test, "tsne", score_logger)
 
     return Z0, Z0_test  # Z0 is used an initialization in hc_tsne
 
 
-def run_hc_tsne(
-    Z_init, tree, alpha, margin, config, score_logger, seed=2020, rerun=False
-):
+def run_hc_tsne(Z_init, tree, alpha, margin, config, score_logger, seed=2020, rerun=False):
     Z1_name = f"{Z_dir}/Z1_{seed}.z"
     Z1_test_name = f"{Z_dir}/Z1_test_{seed}.z"
     loss_name = f"{score_dir}/loss-{name_suffix}.json"
@@ -77,9 +71,7 @@ def run_hc_tsne(
     plot_loss(loss_logger.loss, out_name=f"{plot_dir}/loss-{name_suffix}.png")
 
     if score_logger is not None:
-        evaluate_scores(
-            X_train, y_train, X_test, y_test, Z1, Z1_test, "hc-tsne", score_logger
-        )
+        evaluate_scores(X_train, y_train, X_test, y_test, Z1, Z1_test, "hc-tsne", score_logger)
 
 
 def main(args):
@@ -92,10 +84,7 @@ def main(args):
 
     # run original tsne
     Z0, _ = run_tsne(
-        config=config["Z_init"],
-        score_logger=score_logger,
-        seed=args.seed,
-        rerun=args.rerun0,
+        config=config["Z_init"], score_logger=score_logger, seed=args.seed, rerun=args.rerun0,
     )
 
     # build hierarchical constraint in tree form
@@ -128,9 +117,7 @@ def main(args):
 
 params_config = {
     "mnist": {
-        "Z_init": dict(
-            perplexity=50, n_iter=500, n_jobs=-1, verbose=2,
-        ),  # random_state=2020,
+        "Z_init": dict(perplexity=50, n_iter=500, n_jobs=-1, verbose=2,),  # random_state=2020,
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
@@ -146,9 +133,7 @@ params_config = {
         "alpha2": 7.5e-4,
     },
     "fmnist": {
-        "Z_init": dict(
-            perplexity=50, n_iter=500, n_jobs=-2, verbose=2,
-        ),  #  random_state=2020,
+        "Z_init": dict(perplexity=50, n_iter=500, n_jobs=-2, verbose=2,),  #  random_state=2020,
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
@@ -164,9 +149,7 @@ params_config = {
         "alpha2": 7.5e-4,  # 1e-2
     },
     "cifar10": {
-        "Z_init": dict(
-            perplexity=50, n_iter=500, n_jobs=-2, verbose=2,
-        ),  #  random_state=2020,
+        "Z_init": dict(perplexity=50, n_iter=500, n_jobs=-2, verbose=2,),  #  random_state=2020,
         "Z_new": dict(
             perplexity=50,
             n_iter=100,
@@ -219,11 +202,7 @@ def plot_demo():
     Z = np.array(tsne(X, perplexity=20))
 
     image_grid2(
-        X * 255,
-        Z,
-        ny=n_rows,
-        nx=n_cols,
-        out_name=f"{plot_dir}/pixels_embed_cifar10.jpg",
+        X * 255, Z, ny=n_rows, nx=n_cols, out_name=f"{plot_dir}/pixels_embed_cifar10.jpg",
     )
 
 
@@ -250,12 +229,13 @@ if __name__ == "__main__":
     argm("--margin", "-m", default=0.5, type=float, help="Relative margin tripletloss")
 
     args = parser.parse_args()
+    # NOTE for V1, only use `-n` option
+    args.n_train = args.n
     print(args)
 
     base_dir = ["./", "/content/drive/My Drive/Colab Notebooks/HC-tSNE"][0]
     plot_dir, Z_dir, score_dir = [
-        f"{base_dir}/{dir_name}/{args.dataset_name}"
-        for dir_name in ["plots", "Z", "scores"]
+        f"{base_dir}/{dir_name}/{args.dataset_name}" for dir_name in ["plots", "Z", "scores"]
     ]
     for d in [plot_dir, Z_dir, score_dir]:
         if not os.path.exists(d):
