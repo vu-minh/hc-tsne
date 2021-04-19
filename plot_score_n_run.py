@@ -1,6 +1,7 @@
 # plot score for multiple run
 import os
 import json
+import math
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -53,6 +54,9 @@ def load_scores(cache=True, score_file_name="scores.json"):
 
 
 def plot_scores(scores, out_name="scores.png"):
+    n_samples = 10
+    z = 1.96  # , z_{0.95} = 1.96, z_{0.995} = 2.807
+
     fig, axes = plt.subplots(1, 3, sharey=True, figsize=(7.5, 2.2))
     ax0 = axes[0]
 
@@ -65,10 +69,11 @@ def plot_scores(scores, out_name="scores.png"):
     for ax, (score_name, score_info) in zip(axes.ravel(), score_names.items()):
         score_name_display, min_val, max_val, color = score_info
         ax.set_title(score_name_display, color=color, fontsize=18)
-        score_values, error = zip(
+        score_values, stdev = zip(
             *[scores[method_name][score_name] for method_name in method_names]
         )
-        ax.barh(y_pos, score_values, xerr=error, color=color, align="center")
+        confidence = z * np.array(stdev) / math.sqrt(n_samples)
+        ax.barh(y_pos, score_values, xerr=confidence, color=color, align="center")
         ax.set_xlim(left=min_val, right=max_val)
 
     fig.savefig(out_name, bbox_inches="tight")
